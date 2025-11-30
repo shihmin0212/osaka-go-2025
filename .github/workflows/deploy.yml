@@ -1,0 +1,43 @@
+name: Deploy to GitHub Pages
+
+on:
+  # 監聽 main 分支的 push 動作
+  push:
+    branches: ["main"]
+
+  # 允許手動從 Actions 頁面觸發
+  workflow_dispatch:
+
+# 設定權限，允許寫入 Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 只有一個併發部署，避免衝突
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # 上傳整個根目錄 (因為你的 index.html 就在這裡)
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

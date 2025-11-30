@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Osaka Go! 吉伊卡哇之旅</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Zen Maru Gothic', sans-serif; transition: background 0.5s ease; }
+        .card { 
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 20px rgba(0,0,0, 0.05); 
+            transition: all 0.3s;
+        }
+        .card:active { transform: scale(0.98); }
+        
+        .avatar-btn { transition: transform 0.2s, filter 0.2s; }
+        .avatar-btn:hover { transform: scale(1.1) rotate(5deg); }
+        .avatar-btn.active { transform: scale(1.2) translateY(-5px); filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); border: 3px solid white; }
+
+        .ticket-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        /* 地圖容器 Iframe */
+        .map-container { position: relative; padding-bottom: 60%; height: 0; overflow: hidden; border-radius: 1.5rem; margin-bottom: 1rem; border: 4px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .map-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body :class="theme.bgGradient">
+
+<div id="app" class="max-w-md mx-auto min-h-screen pb-32 transition-colors duration-500">
+    
+    <header class="bg-white/90 backdrop-blur-md sticky top-0 z-50 shadow-sm rounded-b-[2rem] border-b-4 transition-colors duration-500"
+            :class="theme.borderColor">
+        <div class="p-4">
+            <div class="flex justify-between items-start mb-3">
+                <div>
+                    <h1 class="text-3xl font-black tracking-wide flex items-center gap-2" :class="theme.textColor">
+                        Osaka Go!
+                        <span class="text-2xl animate-bounce">{{ theme.icon }}</span>
+                    </h1>
+                    <div class="text-xs font-bold text-gray-400 mt-1 pl-1">12/20 - 12/27 ✨ {{ theme.slogan }}</div>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <button @click="expandAll(false)" class="text-[10px] bg-gray-100 text-gray-500 px-3 py-1 rounded-full font-bold hover:bg-gray-200">收合</button>
+                    <button @click="expandAll(true)" class="text-[10px] text-white px-3 py-1 rounded-full font-bold shadow-sm" :class="theme.btnColor">展開</button>
+                </div>
+            </div>
+
+            <div class="flex justify-center gap-4 mt-2 bg-gray-50/50 p-2 rounded-2xl border border-gray-100">
+                <button @click="setTheme('chiikawa')" class="avatar-btn w-12 h-12 rounded-full bg-pink-100 flex items-center justify-center text-2xl relative" 
+                        :class="{'active ring-2 ring-pink-300': currentThemeKey === 'chiikawa'}">🐹</button>
+                <button @click="setTheme('hachiware')" class="avatar-btn w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-2xl relative"
+                        :class="{'active ring-2 ring-blue-300': currentThemeKey === 'hachiware'}">🐱</button>
+                <button @click="setTheme('usagi')" class="avatar-btn w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center text-2xl relative"
+                        :class="{'active ring-2 ring-yellow-300': currentThemeKey === 'usagi'}">🐰</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="mx-4 mt-4 p-4 bg-white rounded-[2rem] shadow-lg border-2 transition-colors duration-300" :class="theme.lightBorder">
+        <div class="flex justify-between items-center mb-2">
+            <div class="flex flex-col">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-white px-3 py-1 rounded-full shadow-sm transition-colors duration-300" :class="theme.btnColor">
+                        JP ¥ {{ currentRate }}
+                    </span>
+                    <span v-if="loading" class="text-xs animate-pulse" :class="theme.textColor">更新中...</span>
+                </div>
+                <div class="text-[10px] text-gray-400 mt-1 ml-1 font-medium">
+                    <span v-if="lastUpdate">{{ lastUpdate }}</span>
+                    <span v-else>點擊更新 ➜</span>
+                </div>
+            </div>
+            <button @click="fetchRate" class="text-gray-400 hover:opacity-70 text-sm p-2 rounded-full active:bg-gray-100 transition">🔄</button>
+        </div>
+        <div class="flex items-center gap-2 relative">
+            <input type="number" v-model="jpyAmount" placeholder="輸入日幣..." 
+                   class="w-full p-3 pl-4 bg-gray-50 border-2 border-dashed rounded-2xl text-lg font-bold text-gray-600 focus:outline-none transition-colors duration-300"
+                   :class="theme.focusBorder" inputmode="numeric">
+            <div class="absolute right-3 top-1/2 -translate-y-1/2 font-black text-xl pointer-events-none transition-colors duration-300" :class="theme.textColor">
+                <span class="text-gray-300 text-sm mr-1">≈</span>${{ twdAmount }}
+            </div>
+        </div>
+    </div>
+
+    <div class="p-4 space-y-6">
+        
+        <div class="card rounded-[2rem] overflow-hidden border transition-colors duration-300" :class="theme.lightBorder">
+            <div @click="showHotel = !showHotel" class="p-4 flex justify-between items-center cursor-pointer transition-colors duration-300" :class="theme.lightBg">
+                <h2 class="font-bold text-gray-700 flex items-center gap-2"><span>🏨</span> 住宿與集合</h2>
+                <span class="text-xl font-bold transition-transform duration-300" :class="[showHotel ? 'rotate-180' : '', theme.textColor]">⌄</span>
+            </div>
+            <div v-show="showHotel" class="p-4 space-y-3 text-sm bg-white">
+                <div class="flex gap-3 items-start">
+                    <div class="font-bold px-2 py-1 rounded-lg text-xs whitespace-nowrap bg-gray-100 text-gray-600">京都</div>
+                    <div>
+                        <div class="font-bold text-gray-800">VIA INN PRIME 八條口</div>
+                        <div class="text-xs text-gray-400 mt-1">12/20-24 (4晚)</div>
+                        <a :href="getMapLink('VIA INN PRIME KYOTOEKI HACHIJOGUCHI')" class="text-xs underline mt-1 inline-block" :class="theme.textColor">導航</a>
+                    </div>
+                </div>
+                <div class="w-full h-px bg-gray-100"></div>
+                <div class="flex gap-3 items-start">
+                    <div class="font-bold px-2 py-1 rounded-lg text-xs whitespace-nowrap bg-gray-100 text-gray-600">大阪</div>
+                    <div>
+                        <div class="font-bold text-gray-800">相鐵 Fresa Inn 難波</div>
+                        <div class="text-xs text-gray-400 mt-1">12/24-27 (3晚)</div>
+                        <a :href="getMapLink('Sotetsu Fresa Inn Osaka-Namba')" class="text-xs underline mt-1 inline-block" :class="theme.textColor">導航</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-for="(day, index) in itinerary" :key="index" class="relative group">
+            
+            <div @click="day.isOpen = !day.isOpen" 
+                 class="sticky top-[180px] z-30 cursor-pointer mb-4 transition-transform active:scale-95">
+                <div class="mx-auto w-full bg-white/95 backdrop-blur shadow-md rounded-full px-4 py-3 border-2 flex items-center justify-between transition-colors duration-300"
+                     :class="day.isOpen ? theme.borderColor + ' ' + theme.textColor : 'border-gray-200 text-gray-500'">
+                    <div class="flex items-center gap-3">
+                        <span class="font-black rounded-full w-8 h-8 flex items-center justify-center text-sm shadow-inner transition-colors duration-300"
+                              :class="day.isOpen ? theme.btnColor + ' text-white' : 'bg-gray-100 text-gray-600'">
+                            {{ index + 1 }}
+                        </span>
+                        <span class="font-bold text-base">{{ day.date }}</span>
+                        <span class="text-xs px-2 py-0.5 rounded-md bg-gray-50 border">{{ day.area }}</span>
+                    </div>
+                    <span class="text-xl font-bold" :class="day.isOpen ? theme.textColor : 'text-gray-300'">
+                        {{ day.isOpen ? '−' : '+' }}
+                    </span>
+                </div>
+            </div>
+
+            <div v-show="day.isOpen" class="space-y-4 px-1 pb-6">
+                
+                <div class="map-container shadow-inner">
+                    <iframe 
+                        :src="`https://maps.google.com/maps?q=${encodeURIComponent(day.mapFocus || day.area)}&t=&z=14&ie=UTF8&iwloc=&output=embed`" 
+                        frameborder="0" scrolling="no" marginheight="0" marginwidth="0">
+                    </iframe>
+                    <a :href="getDailyRouteLink(day.spots)" target="_blank" 
+                       class="absolute inset-0 bg-black/10 hover:bg-black/20 flex items-center justify-center group/map transition">
+                        <span class="bg-white/90 text-gray-800 px-4 py-2 rounded-full font-bold shadow-lg transform group-hover/map:scale-110 transition flex items-center gap-2 border-2 border-white">
+                            <span>🌱</span> 點擊檢查步行路線 & 步數
+                        </span>
+                    </a>
+                </div>
+
+                <div v-for="(item, i) in day.spots" :key="i" 
+                     class="card rounded-[1.5rem] p-4 relative border-l-[6px]" 
+                     :class="item.mustGo ? theme.borderColor : 'border-l-gray-300'"
+                     @click.stop="openMap(item.name)">
+                    
+                    <div class="flex gap-4">
+                        <div class="flex flex-col items-center gap-1 min-w-[50px]">
+                            <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-lg">{{ item.time }}</span>
+                            <div class="text-3xl mt-2 filter drop-shadow-sm">{{ getTypeIcon(item.type) }}</div>
+                        </div>
+
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-start">
+                                <h3 class="font-bold text-gray-700 text-lg leading-tight">{{ item.name }}</h3>
+                                <span v-if="item.mustGo" class="shrink-0 text-[10px] text-white px-2 py-1 rounded-full shadow-sm ml-2 animate-pulse"
+                                      :class="theme.btnColor">
+                                    必去!
+                                </span>
+                            </div>
+
+                            <div class="flex flex-wrap gap-1.5 mt-2">
+                                <span class="text-[10px] px-2 py-1 rounded-lg font-bold bg-gray-100 text-gray-500">
+                                    #{{ getTypeName(item.type) }}
+                                </span>
+                            </div>
+
+                            <p class="text-sm text-gray-500 mt-2 leading-relaxed font-medium">
+                                {{ item.desc }}
+                            </p>
+
+                            <div v-if="item.ticket" class="mt-3">
+                                <a :href="item.ticket.url" target="_blank" @click.stop 
+                                   class="ticket-btn flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold w-full justify-center border-2"
+                                   :class="item.ticket.booked ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-500 border-red-200'">
+                                    <span v-if="item.ticket.booked">✅ 已預訂 ({{ item.ticket.source }})</span>
+                                    <span v-else>🎫 前往購買 ({{ item.ticket.source }})</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const { createApp, ref, computed, onMounted } = Vue;
+
+    const AID = '27749';
+    const appendAID = (url) => {
+        if (!url) return '#';
+        if (url.includes('aid=')) return url;
+        const separator = url.includes('?') ? '&' : '?';
+        return `${url}${separator}aid=${AID}`;
+    };
+
+    const THEMES = {
+        chiikawa: { name: '吉伊', icon: '🐹', slogan: 'WakuWaku', bgGradient: 'bg-gradient-to-br from-pink-50 via-white to-pink-100', textColor: 'text-pink-500', borderColor: 'border-pink-300', btnColor: 'bg-pink-400', lightBg: 'bg-pink-50', lightBorder: 'border-pink-100', focusBorder: 'focus:border-pink-300' },
+        hachiware: { name: '小八', icon: '🐱', slogan: 'Nantoka-nare', bgGradient: 'bg-gradient-to-br from-blue-50 via-white to-blue-100', textColor: 'text-blue-500', borderColor: 'border-blue-300', btnColor: 'bg-blue-400', lightBg: 'bg-blue-50', lightBorder: 'border-blue-100', focusBorder: 'focus:border-blue-300' },
+        usagi: { name: '烏薩奇', icon: '🐰', slogan: 'Ura!', bgGradient: 'bg-gradient-to-br from-yellow-50 via-white to-orange-100', textColor: 'text-yellow-600', borderColor: 'border-yellow-400', btnColor: 'bg-yellow-400', lightBg: 'bg-yellow-50', lightBorder: 'border-yellow-200', focusBorder: 'focus:border-yellow-400' }
+    };
+
+    createApp({
+        setup() {
+            const currentThemeKey = ref('hachiware');
+            const jpyAmount = ref('');
+            const rate = ref(0.22);
+            const currentRate = ref('0.2200');
+            const loading = ref(false);
+            const showHotel = ref(true);
+            const lastUpdate = ref('');
+            const theme = computed(() => THEMES[currentThemeKey.value]);
+            const setTheme = (key) => currentThemeKey.value = key;
+
+            const LINKS = {
+                HARUKA: appendAID('https://www.klook.com/zh-TW/activity/18400-jr-haruka-airport-express-train-tickets-osaka/'),
+                AMANOHASHIDATE: appendAID('https://www.klook.com/zh-TW/activity/25686-amanohashidate-ine-boathouse-miyama-kayabuki-no-sato-day-tour-osaka/'),
+                UMEDA_SKY: appendAID('https://www.klook.com/zh-TW/activity/1301-umeda-sky-building-osaka/'),
+                RAPIT: appendAID('https://www.klook.com/zh-TW/activity/599-kansai-airport-nankai-line-osaka/'),
+                HARUKAS: appendAID('https://www.klook.com/zh-TW/activity/2424-harukas-300-observatory-ticket-osaka/')
+            };
+
+            const fetchRate = async () => {
+                loading.value = true;
+                try {
+                    const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://tw.rter.info/capi.php'));
+                    const raw = await res.json();
+                    const data = JSON.parse(raw.contents);
+                    if(data.USDTWD && data.USDJPY) {
+                        const usdToTwd = data.USDTWD.Exrate;
+                        const usdToJpy = data.USDJPY.Exrate;
+                        const calculatedRate = usdToTwd / usdToJpy;
+                        rate.value = calculatedRate;
+                        currentRate.value = calculatedRate.toFixed(4);
+                        lastUpdate.value = `更新時間: ${data.USDTWD.UTC}`;
+                    }
+                } catch(e) { console.error(e); } finally { loading.value = false; }
+            };
+
+            const itinerary = ref([
+                {
+                    date: '12/20 (六)', area: '京都車站', mapFocus: 'Kyoto Station', isOpen: true,
+                    spots: [
+                        { time: '12:50', type: 'spot', name: '關西機場', desc: '入境 / 領取 Haruka 車票', ticket: { source: 'Klook', url: LINKS.HARUKA, booked: true }},
+                        { time: '15:00', type: 'spot', name: 'VIA INN PRIME 京都站八條口', desc: 'Check-in (車站八條口)' },
+                        { time: '17:00', type: 'food', mustGo: true, name: 'Sushi no Musashi', desc: '迴轉壽司 (飯店旁)' },
+                        { time: '19:00', type: 'shop', name: 'Kyoto Station Building', desc: '大階梯 / 聖誕樹' }
+                    ]
+                },
+                // 🌟 Day 2: 嵐山 + 金閣寺 (強勢回歸!) 🌟
+                {
+                    date: '12/21 (日)', area: '嵐山/金閣寺', mapFocus: 'Arashiyama Bamboo Forest', isOpen: true,
+                    spots: [
+                        { time: '09:00', type: 'spot', mustGo: true, name: '嵐山竹林之道 (Arashiyama Bamboo Grove)', desc: '必拍經典！建議早起避開人潮，順道去野宮神社' },
+                        { time: '10:30', type: 'spot', name: '天龍寺 (Tenryu-ji)', desc: '世界遺產庭園，就在竹林旁' },
+                        { time: '12:00', type: 'food', name: '嵐山大街午餐', desc: '推薦：廣川鰻魚飯 或 鯛匠HANANA (若排隊太長可吃小吃)' },
+                        { time: '13:30', type: 'spot', mustGo: true, name: '金閣寺 (Kinkaku-ji)', desc: '搭乘計程車(約20分)或巴士前往，下午陽光照射最美' },
+                        { time: '16:00', type: 'spot', name: '京都車站', desc: '返回市區休息/晚餐' }
+                    ]
+                },
+                {
+                    date: '12/22 (一)', area: '海之京都一日遊', mapFocus: 'Amanohashidate', isOpen: true,
+                    spots: [
+                        { time: '07:40', type: 'spot', mustGo: true, name: '京都駅八條口', desc: '一日遊集合 (AVANTI前)', ticket: { source: 'Klook', url: LINKS.AMANOHASHIDATE, booked: false }},
+                        { time: '10:30', type: 'spot', name: '天橋立 View Land', desc: '飛龍在天' },
+                        { time: '13:00', type: 'spot', name: '伊根舟屋', desc: '餵食海鷗' },
+                        { time: '19:00', type: 'food', name: '京都拉麵小路', desc: '晚餐 (車站10樓)' }
+                    ]
+                },
+                // 🌟 Day 4: 伏見+錦市場+清水寺 (超級精華日) 🌟
+                {
+                    date: '12/23 (二)', area: '洛東精華', mapFocus: 'Nishiki Market', isOpen: true,
+                    spots: [
+                        { time: '09:00', type: 'spot', name: '伏見稻荷大社', desc: '搭乘京阪電車前往，千本鳥居' },
+                        { time: '10:00', type: 'shop', mustGo: true, name: 'Chiikawa Mogumogu Honpo', desc: '吉伊卡哇伏見店 (就在神社旁)' },
+                        { time: '11:00', type: 'food', mustGo: true, name: 'Kyoto Ito Okashi', desc: '伊藤軒甜點' },
+                        { time: '12:00', type: 'food', mustGo: true, name: '錦市場 (Nishiki Market)', desc: '前往河原町，吃豆乳甜甜圈/玉子燒當午餐' },
+                        { time: '14:00', type: 'spot', mustGo: true, name: '清水寺', desc: '從錦市場搭公車或計程車前往' },
+                        { time: '15:30', type: 'shop', mustGo: true, name: '2/8b pair keyholder 京都清水店', desc: '可愛吊飾店' },
+                        { time: '16:30', type: 'cafe', mustGo: true, name: 'Blue Bottle Coffee Woodbury', desc: '藍瓶木屋町店 (立誠小學改建)' }
+                    ]
+                },
+                {
+                    date: '12/24 (三)', area: '移動/心齋橋', mapFocus: 'Shinsaibashi PARCO', isOpen: true,
+                    spots: [
+                        { time: '10:00', type: 'spot', name: '大阪 Check-in', desc: 'Sotetsu Fresa Inn 難波' },
+                        { time: '12:30', type: 'food', mustGo: true, name: '一蘭 難波御堂筋店', desc: '午餐' },
+                        { time: '14:00', type: 'shop', mustGo: true, name: 'Chiikawa Land Shinsaibashi', desc: 'PARCO 吉伊卡哇' },
+                        { time: '19:00', type: 'food', mustGo: true, name: 'Shabucho', desc: '和牛涮涮鍋' }
+                    ]
+                },
+                {
+                    date: '12/25 (四)', area: '梅田/聖誕', mapFocus: 'Umeda Station', isOpen: true,
+                    spots: [
+                        { time: '10:00', type: 'shop', mustGo: true, name: 'Standard Products Umeda DT Tower', desc: '梅田DT塔B2' },
+                        { time: '10:30', type: 'shop', mustGo: true, name: 'DAISO Umeda DT Tower', desc: '百元店' },
+                        { time: '11:30', type: 'shop', mustGo: true, name: '3COINS +plus LUCUA', desc: 'LUCUA百貨' },
+                        { time: '12:30', type: 'food', mustGo: true, name: '牛太本陣 LINKS UMEDA', desc: '午餐：燒肉' },
+                        { time: '14:30', type: 'shop', mustGo: true, name: 'Kiddyland 大阪梅田店', desc: '吉伊卡哇周邊' },
+                        { time: '17:00', type: 'food', mustGo: true, name: 'Sukiyaki Iroha Kitamise', desc: '晚餐：iroha 壽喜燒 (北新地)' },
+                        { time: '19:00', type: 'spot', name: '梅田藍天大廈', desc: '聖誕市集夜景', ticket: { source: 'Klook', url: LINKS.UMEDA_SKY, booked: false }},
+                        { time: '21:00', type: 'food', mustGo: true, name: '麥×鷄 (Mugi to Tori)', desc: '宵夜：雞白湯拉麵' }
+                    ]
+                },
+                {
+                    date: '12/26 (五)', area: '難波/阿倍野', mapFocus: 'Harukas 300', isOpen: true,
+                    spots: [
+                        { time: '10:00', type: 'food', mustGo: true, name: 'CANELÉ du JAPON', desc: '可麗露' },
+                        { time: '12:30', type: 'food', mustGo: true, name: 'うなぎの中庄 難波店', desc: '鰻魚飯' },
+                        { time: '14:30', type: 'shop', name: '難波 Parks', desc: '逛街補貨' },
+                        { time: '16:30', type: 'spot', mustGo: true, name: 'Harukas 300 (Abeno Harukas)', desc: '阿倍野展望台！看夕陽與夜景', ticket: { source: 'Klook', url: LINKS.HARUKAS, booked: false }},
+                        { time: '19:00', type: 'food', mustGo: true, name: '燒肉力丸 難波道頓堀店', desc: '燒肉吃到飽' }
+                    ]
+                },
+                {
+                    date: '12/27 (六)', area: '返程', mapFocus: 'Kansai Airport', isOpen: true,
+                    spots: [
+                        { time: '09:30', type: 'spot', name: '南海難波站', desc: '搭乘 Rapi:t', ticket: { source: 'Klook', url: LINKS.RAPIT, booked: false }},
+                        { time: '10:30', type: 'shop', name: 'Rinku Premium Outlets', desc: '臨空城 Outlet' },
+                        { time: '14:00', type: 'spot', name: 'Kansai Airport', desc: 'JX823 起飛' }
+                    ]
+                }
+            ]);
+
+            const expandAll = (state) => { itinerary.value.forEach(day => day.isOpen = state); };
+            const twdAmount = computed(() => !jpyAmount.value ? 0 : Math.ceil(jpyAmount.value * rate.value));
+            const getMapLink = (q) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+            const openMap = (q) => window.open(getMapLink(q), '_blank');
+            const getDailyRouteLink = (spots) => {
+                if (spots.length < 2) return '#';
+                const validSpots = spots.map(s => s.name);
+                const origin = encodeURIComponent(validSpots[0]);
+                const destination = encodeURIComponent(validSpots[validSpots.length - 1]);
+                const waypoints = validSpots.slice(1, -1).map(s => encodeURIComponent(s)).join('|');
+                return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}&travelmode=transit`;
+            };
+            const getTypeIcon = (t) => ({food:'🍜',shop:'🛍️',spot:'⛩️',cafe:'☕'}[t] || '📍');
+            const getTypeName = (t) => ({food:'美食',shop:'購物',spot:'景點',cafe:'咖啡'}[t] || '行程');
+
+            onMounted(() => fetchRate());
+
+            return { 
+                jpyAmount, twdAmount, currentRate, loading, fetchRate, itinerary, 
+                getMapLink, openMap, showHotel, expandAll, getDailyRouteLink, 
+                getTypeIcon, getTypeName, currentThemeKey, theme, setTheme, lastUpdate
+            };
+        }
+    }).mount('#app');
+</script>
+
+</body>
+</html>

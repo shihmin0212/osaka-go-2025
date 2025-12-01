@@ -9,48 +9,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Zen Maru Gothic', sans-serif; transition: background 0.5s ease; }
-        
-        /* 吉伊卡哇風格卡片 */
         .card { 
-            background: rgba(255, 255, 255, 0.98); 
+            background: rgba(255, 255, 255, 0.95); 
             backdrop-filter: blur(10px);
-            box-shadow: 0 4px 15px rgba(0,0,0, 0.05); 
-            border-radius: 1.5rem;
-            transition: transform 0.2s;
-            position: relative;
-            z-index: 10;
+            box-shadow: 0 8px 20px rgba(0,0,0, 0.05); 
+            transition: all 0.3s;
         }
         .card:active { transform: scale(0.98); }
-        
-        /* 角色頭像按鈕 */
         .avatar-btn { transition: transform 0.2s, filter 0.2s; }
         .avatar-btn:hover { transform: scale(1.1) rotate(5deg); }
         .avatar-btn.active { transform: scale(1.2) translateY(-5px); filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); border: 3px solid white; }
-
-        /* 隱藏捲軸 */
+        .ticket-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .map-container { position: relative; padding-bottom: 60%; height: 0; overflow: hidden; border-radius: 1.5rem; margin-bottom: 1rem; border: 4px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .map-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* 動畫 */
         .fade-enter-active, .fade-leave-active { transition: opacity 0.3s, transform 0.3s; }
-        .fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(20px); }
-
-        /* 交通連接線樣式 */
-        .timeline-connector {
-            position: absolute;
-            left: 28px; /* 對齊左側圖示中心 */
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background-image: linear-gradient(to bottom, #cbd5e1 50%, transparent 50%);
-            background-size: 4px 16px;
-            background-repeat: repeat-y;
-            z-index: 0;
-        }
-        
-        /* Modal */
+        .fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(20px) scale(0.8); }
         .modal-enter-active, .modal-leave-active { transition: opacity 0.3s; }
         .modal-enter-from, .modal-leave-to { opacity: 0; }
+        .modal-enter-active .modal-content, .modal-leave-active .modal-content { transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .modal-enter-from .modal-content, .modal-leave-to .modal-content { transform: scale(0.8) translateY(50px); }
     </style>
 </head>
 <body :class="theme.bgGradient">
@@ -70,7 +49,7 @@
                 </div>
                 
                 <div class="flex gap-2">
-                    <button @click="showTranslator = true" class="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm border-2 border-gray-100 bg-white hover:bg-gray-50">🗣️</button>
+                    <button @click="showTranslator = true" class="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm border-2 border-gray-100 bg-white hover:bg-gray-50 transition active:scale-95">🗣️</button>
                     <div class="flex flex-col gap-1">
                         <button @click="expandAll(false)" class="text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded-full font-bold">收合</button>
                         <button @click="expandAll(true)" class="text-[10px] text-white px-2 py-1 rounded-full font-bold shadow-sm" :class="theme.btnColor">展開</button>
@@ -163,18 +142,28 @@
 
             <div v-show="day.isOpen" class="px-1 pb-6 relative">
                 
+                <div v-if="getMorningStart(index)" class="relative pl-8 pb-6 pt-2 flex items-center">
+                    <div class="absolute left-[29px] top-1/2 bottom-[-20px] w-0.5 border-l-2 border-dashed border-gray-300 -z-0"></div>
+                    
+                    <a :href="getPointToPointLink(getMorningStart(index), day.spots[0].name)" target="_blank"
+                       class="relative z-10 flex items-center gap-2 bg-gradient-to-r from-blue-50 to-white border border-blue-100 shadow-sm px-4 py-2 rounded-full text-xs font-bold text-blue-600 hover:shadow-md transition ml-6 w-full justify-center group">
+                        <span class="text-lg">🏨</span>
+                        <span>從飯店出發</span>
+                        <span class="text-blue-300">➜</span>
+                        <span class="text-gray-600 truncate">{{ day.spots[0].name }}</span>
+                    </a>
+                </div>
+
                 <div v-for="(item, i) in day.spots" :key="i" class="relative mb-2">
                     
                     <div class="card p-4 relative border-l-[6px] z-10" 
                          :class="item.mustGo ? theme.borderColor : 'border-l-gray-300'"
                          @click.stop="openMap(item.name)">
-                        
                         <div class="flex gap-4">
                             <div class="flex flex-col items-center gap-1 min-w-[50px]">
                                 <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-lg">{{ item.time }}</span>
                                 <div class="text-3xl mt-2 filter drop-shadow-sm">{{ getTypeIcon(item.type) }}</div>
                             </div>
-
                             <div class="flex-1 min-w-0">
                                 <div class="flex justify-between items-start">
                                     <h3 class="font-bold text-gray-700 text-lg leading-tight">{{ item.name }}</h3>
@@ -185,7 +174,6 @@
                                     <span class="text-[10px] px-2 py-1 rounded-lg font-bold bg-gray-100 text-gray-500">#{{ getTypeName(item.type) }}</span>
                                 </div>
                                 <p class="text-sm text-gray-500 mt-2 leading-relaxed font-medium">{{ item.desc }}</p>
-                                
                                 <div v-if="item.ticket" class="mt-3">
                                     <a :href="item.ticket.url" target="_blank" @click.stop 
                                        class="ticket-btn flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold w-full justify-center border-2"
@@ -200,7 +188,6 @@
 
                     <div v-if="i < day.spots.length - 1" class="relative pl-8 py-3 flex items-center">
                         <div class="absolute left-[29px] top-0 bottom-0 w-0.5 border-l-2 border-dashed border-gray-300 -z-0"></div>
-                        
                         <a :href="getPointToPointLink(item.name, day.spots[i+1].name)" target="_blank"
                            class="relative z-10 flex items-center gap-2 bg-white border border-gray-200 shadow-sm px-4 py-2 rounded-full text-xs font-bold text-gray-500 hover:text-white hover:bg-gray-400 transition ml-6 w-full justify-center group">
                             <span class="text-base group-hover:scale-125 transition">🚶/🚇</span>
@@ -314,13 +301,15 @@
                 }
             };
 
-            // 🌟 點對點交通連結 (核心功能) 🌟
             const getMapLink = (q) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
             const openMap = (q) => window.open(getMapLink(q), '_blank');
-            
-            // 這是您要求的「進度條黏在一起」的關鍵連結
-            const getPointToPointLink = (origin, dest) => {
-                return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}&travelmode=transit&dirflg=r`;
+            const getPointToPointLink = (origin, dest) => `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}&travelmode=transit&dirflg=r`;
+
+            // 🌟 判斷每天早上從哪出發 🌟
+            const getMorningStart = (dayIndex) => {
+                if (dayIndex === 0) return null; // Day 1 剛到機場
+                if (dayIndex <= 4) return 'VIA INN PRIME KYOTOEKI HACHIJOGUCHI'; // Day 2-5 早上在京都
+                return 'Sotetsu Fresa Inn Osaka-Namba'; // Day 6-8 早上在大阪
             };
 
             const getTypeIcon = (t) => ({food:'🍜',shop:'🛍️',spot:'⛩️',cafe:'☕'}[t] || '📍');
@@ -426,7 +415,8 @@
                 jpyAmount, twdAmount, currentRate, loading, fetchRate, itinerary, 
                 getMapLink, getPointToPointLink, openMap, showHotel, expandAll, 
                 getTypeIcon, getTypeName, currentThemeKey, theme, setTheme, lastUpdate,
-                showScrollTop, scrollToTop, showTranslator, currentCategory, currentPhrases, speakJapanese
+                showScrollTop, scrollToTop, showTranslator, currentCategory, currentPhrases, speakJapanese,
+                getMorningStart // 🌟 匯出函式供 HTML 使用
             };
         }
     }).mount('#app');

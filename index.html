@@ -6,7 +6,9 @@
     <title>Osaka Go! 吉伊卡哇之旅</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+    
     <style>
         body { font-family: 'Zen Maru Gothic', sans-serif; transition: background 0.5s ease; }
         .card { 
@@ -26,10 +28,27 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .fade-enter-active, .fade-leave-active { transition: opacity 0.3s, transform 0.3s; }
         .fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(20px) scale(0.8); }
+        
+        /* Modal 動畫 */
         .modal-enter-active, .modal-leave-active { transition: opacity 0.3s; }
         .modal-enter-from, .modal-leave-to { opacity: 0; }
         .modal-enter-active .modal-content, .modal-leave-active .modal-content { transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .modal-enter-from .modal-content, .modal-leave-to .modal-content { transform: scale(0.8) translateY(50px); }
+
+        /* 掃描線動畫 */
+        .scan-line {
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: #ec4899;
+            box-shadow: 0 0 10px #ec4899;
+            animation: scan 2s infinite linear;
+        }
+        @keyframes scan {
+            0% { top: 0; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
     </style>
 </head>
 <body :class="theme.bgGradient">
@@ -49,7 +68,13 @@
                 </div>
                 
                 <div class="flex gap-2">
-                    <button @click="showTranslator = true" class="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm border-2 border-gray-100 bg-white hover:bg-gray-50 transition active:scale-95">🗣️</button>
+                    <button @click="triggerCamera" class="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm border-2 border-gray-100 bg-white hover:bg-gray-50 transition active:scale-95">
+                        📷
+                    </button>
+                    <button @click="showTranslator = true" class="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm border-2 border-gray-100 bg-white hover:bg-gray-50 transition active:scale-95">
+                        🗣️
+                    </button>
+                    
                     <div class="flex flex-col gap-1">
                         <button @click="expandAll(false)" class="text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded-full font-bold">收合</button>
                         <button @click="expandAll(true)" class="text-[10px] text-white px-2 py-1 rounded-full font-bold shadow-sm" :class="theme.btnColor">展開</button>
@@ -67,6 +92,8 @@
             </div>
         </div>
     </header>
+
+    <input type="file" ref="cameraInput" accept="image/*" capture="environment" class="hidden" @change="handleImageUpload">
 
     <div class="mx-4 mt-4 p-4 bg-white rounded-[2rem] shadow-lg border-2 transition-colors duration-300" :class="theme.lightBorder">
         <div class="flex justify-between items-center mb-2">
@@ -144,7 +171,6 @@
                 
                 <div v-if="getMorningStart(index)" class="relative pl-8 pb-6 pt-2 flex items-center">
                     <div class="absolute left-[29px] top-1/2 bottom-[-20px] w-0.5 border-l-2 border-dashed border-gray-300 -z-0"></div>
-                    
                     <a :href="getPointToPointLink(getMorningStart(index), day.spots[0].name)" target="_blank"
                        class="relative z-10 flex items-center gap-2 bg-gradient-to-r from-blue-50 to-white border border-blue-100 shadow-sm px-4 py-2 rounded-full text-xs font-bold text-blue-600 hover:shadow-md transition ml-6 w-full justify-center group">
                         <span class="text-lg">🏨</span>
@@ -155,7 +181,6 @@
                 </div>
 
                 <div v-for="(item, i) in day.spots" :key="i" class="relative mb-2">
-                    
                     <div class="card p-4 relative border-l-[6px] z-10" 
                          :class="item.mustGo ? theme.borderColor : 'border-l-gray-300'"
                          @click.stop="openMap(item.name)">
@@ -196,11 +221,55 @@
                             <span class="text-gray-700 group-hover:text-white">{{ day.spots[i+1].name }}</span>
                         </a>
                     </div>
-
                 </div>
             </div>
         </div>
     </div>
+
+    <transition name="modal">
+        <div v-if="showScanner" class="fixed inset-0 z-[100] flex items-center justify-center px-4 py-6" style="background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);">
+            <div class="modal-content w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden relative border-4" :class="theme.borderColor">
+                <div class="p-4 border-b flex justify-between items-center" :class="theme.lightBg">
+                    <h3 class="font-bold text-lg flex items-center gap-2" :class="theme.textColor">📷 菜單翻譯</h3>
+                    <button @click="closeScanner" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">×</button>
+                </div>
+                
+                <div class="p-4 text-center">
+                    <div v-if="isScanning" class="py-8">
+                        <div class="w-16 h-16 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4" :class="theme.borderColor"></div>
+                        <p class="text-gray-500 font-bold animate-pulse">正在辨識日文...</p>
+                        <p class="text-xs text-gray-400 mt-2">首次使用需下載語言包，請稍候</p>
+                    </div>
+
+                    <div v-else-if="scannedText" class="space-y-4">
+                        <div class="bg-gray-50 p-3 rounded-xl border text-left max-h-40 overflow-y-auto">
+                            <p class="text-xs text-gray-400 mb-1">辨識結果 (日文):</p>
+                            <p class="text-sm font-bold text-gray-800 whitespace-pre-wrap">{{ scannedText }}</p>
+                        </div>
+                        
+                        <div v-if="translatedText" class="bg-green-50 p-3 rounded-xl border border-green-200 text-left">
+                            <p class="text-xs text-green-600 mb-1">參考翻譯 (中文):</p>
+                            <p class="text-sm font-bold text-green-800 whitespace-pre-wrap">{{ translatedText }}</p>
+                        </div>
+
+                        <div class="flex flex-col gap-2">
+                            <a :href="`https://translate.google.com/?sl=ja&tl=zh-TW&text=${encodeURIComponent(scannedText)}&op=translate`" target="_blank"
+                               class="bg-blue-500 text-white py-3 rounded-xl font-bold shadow-md hover:bg-blue-600 flex items-center justify-center gap-2">
+                                <span>G</span> 在 Google 翻譯開啟
+                            </a>
+                            <button @click="triggerCamera" class="bg-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-200">
+                                再拍一張
+                            </button>
+                        </div>
+                    </div>
+
+                    <div v-else class="py-10 text-gray-400">
+                        <p>請拍攝菜單或說明書</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </transition>
 
     <transition name="modal">
         <div v-if="showTranslator" class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center px-4 py-6" style="background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);">
@@ -264,6 +333,13 @@
             const showTranslator = ref(false);
             const currentCategory = ref('用餐');
             
+            // 🌟 掃描器狀態 🌟
+            const showScanner = ref(false);
+            const isScanning = ref(false);
+            const scannedText = ref('');
+            const translatedText = ref('');
+            const cameraInput = ref(null);
+            
             const theme = computed(() => THEMES[currentThemeKey.value]);
             const setTheme = (key) => currentThemeKey.value = key;
             const currentPhrases = computed(() => JP_DATA[currentCategory.value]);
@@ -274,6 +350,65 @@
                 UMEDA_SKY: appendAID('https://www.klook.com/zh-TW/activity/1301-umeda-sky-building-osaka/'),
                 RAPIT: appendAID('https://www.klook.com/zh-TW/activity/599-kansai-airport-nankai-line-osaka/'),
                 HARUKAS: appendAID('https://www.klook.com/zh-TW/activity/2424-harukas-300-observatory-ticket-osaka/')
+            };
+
+            // 🌟 掃描與翻譯邏輯 🌟
+            const triggerCamera = () => {
+                scannedText.value = '';
+                translatedText.value = '';
+                showScanner.value = true;
+                // 延遲一下讓 Modal 先開，再點擊 Input
+                setTimeout(() => cameraInput.value.click(), 100);
+            };
+
+            const closeScanner = () => {
+                showScanner.value = false;
+                isScanning.value = false;
+            };
+
+            const handleImageUpload = async (e) => {
+                const file = e.target.files[0];
+                if (!file) {
+                    showScanner.value = false;
+                    return;
+                }
+
+                isScanning.value = true;
+                
+                try {
+                    // 1. 執行 OCR
+                    const { data: { text } } = await Tesseract.recognize(
+                        file,
+                        'jpn', // 日語
+                        { logger: m => console.log(m) }
+                    );
+                    
+                    // 去除多餘空白
+                    const cleanText = text.replace(/\s+/g, '');
+                    scannedText.value = cleanText || '無法辨識文字，請重試。';
+
+                    // 2. 嘗試簡易翻譯 (使用免費 MyMemory API，限制 500 字)
+                    if (cleanText && cleanText.length > 0) {
+                        try {
+                            const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(cleanText.substring(0, 300))}&langpair=ja|zh-TW`);
+                            const json = await res.json();
+                            if (json.responseData) {
+                                translatedText.value = json.responseData.translatedText;
+                            }
+                        } catch (err) {
+                            console.error('翻譯 API 失敗', err);
+                            translatedText.value = '翻譯連線失敗，請使用下方 Google 按鈕。';
+                        }
+                    }
+
+                } catch (err) {
+                    console.error(err);
+                    scannedText.value = '發生錯誤，請重試。';
+                } finally {
+                    isScanning.value = false;
+                    // 清空 Input 以便重複觸發
+                    e.target.value = '';
+                }
             };
 
             const fetchRate = async () => {
@@ -305,11 +440,10 @@
             const openMap = (q) => window.open(getMapLink(q), '_blank');
             const getPointToPointLink = (origin, dest) => `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}&travelmode=transit&dirflg=r`;
 
-            // 🌟 判斷每天早上從哪出發 🌟
             const getMorningStart = (dayIndex) => {
-                if (dayIndex === 0) return null; // Day 1 剛到機場
-                if (dayIndex <= 4) return 'VIA INN PRIME KYOTOEKI HACHIJOGUCHI'; // Day 2-5 早上在京都
-                return 'Sotetsu Fresa Inn Osaka-Namba'; // Day 6-8 早上在大阪
+                if (dayIndex === 0) return null;
+                if (dayIndex <= 4) return 'VIA INN PRIME KYOTOEKI HACHIJOGUCHI';
+                return 'Sotetsu Fresa Inn Osaka-Namba';
             };
 
             const getTypeIcon = (t) => ({food:'🍜',shop:'🛍️',spot:'⛩️',cafe:'☕'}[t] || '📍');
@@ -416,7 +550,8 @@
                 getMapLink, getPointToPointLink, openMap, showHotel, expandAll, 
                 getTypeIcon, getTypeName, currentThemeKey, theme, setTheme, lastUpdate,
                 showScrollTop, scrollToTop, showTranslator, currentCategory, currentPhrases, speakJapanese,
-                getMorningStart // 🌟 匯出函式供 HTML 使用
+                getMorningStart, 
+                triggerCamera, showScanner, isScanning, scannedText, translatedText, closeScanner, handleImageUpload, cameraInput
             };
         }
     }).mount('#app');

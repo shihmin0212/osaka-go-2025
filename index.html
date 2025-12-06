@@ -81,10 +81,11 @@
         </div>
     </div>
 
-    <div class="sticky top-[165px] z-40 bg-white/95 backdrop-blur shadow-sm pt-2 pb-2 overflow-x-auto no-scrollbar flex gap-2 px-4 border-b border-gray-100">
+    <div class="sticky top-[165px] z-40 bg-white/95 backdrop-blur shadow-sm pt-2 pb-2 overflow-x-auto no-scrollbar flex gap-2 px-4 border-b border-gray-100" ref="tabContainer">
         <button v-for="(day, index) in itinerary" :key="index"
                 @click="activeDayIndex = index"
-                class="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-all border border-transparent"
+                :id="'day-tab-' + index"
+                class="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-all border border-transparent whitespace-nowrap"
                 :class="activeDayIndex === index ? 'bg-gray-800 text-white shadow-lg scale-105' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'">
             {{ day.date.split(' ')[0] }}
             <span class="block text-[10px] font-normal opacity-80">{{ day.area }}</span>
@@ -99,6 +100,52 @@
                 <div class="text-xs text-blue-800">
                     <span class="font-bold block">今晚住：{{ getHotelName(activeDayIndex) }}</span>
                     <a :href="getMapLink(getHotelName(activeDayIndex))" target="_blank" class="underline opacity-70">導航去飯店</a>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="activeDayIndex === 0" class="card mb-4 p-4 border-l-[6px] border-purple-400 bg-purple-50">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold text-purple-800">✈️ 去程航班 (星宇航空)</h3>
+                <span class="text-xs bg-white px-2 py-1 rounded text-purple-600 font-bold">JX822</span>
+            </div>
+            <div class="flex justify-between text-sm text-gray-700 font-mono">
+                <div class="text-center">
+                    <div class="font-bold text-xl">09:20</div>
+                    <div class="text-xs text-gray-500">TPE 桃園</div>
+                </div>
+                <div class="flex flex-col items-center justify-center px-2">
+                    <span class="text-xs text-gray-400">2h 30m</span>
+                    <div class="w-16 h-0.5 bg-gray-300 relative">
+                        <span class="absolute -top-1.5 right-0">✈</span>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="font-bold text-xl">12:50</div>
+                    <div class="text-xs text-gray-500">KIX 關西</div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="activeDayIndex === 7" class="card mb-4 p-4 border-l-[6px] border-purple-400 bg-purple-50">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold text-purple-800">✈️ 回程航班 (星宇航空)</h3>
+                <span class="text-xs bg-white px-2 py-1 rounded text-purple-600 font-bold">JX823</span>
+            </div>
+            <div class="flex justify-between text-sm text-gray-700 font-mono">
+                <div class="text-center">
+                    <div class="font-bold text-xl">14:00</div>
+                    <div class="text-xs text-gray-500">KIX 關西</div>
+                </div>
+                <div class="flex flex-col items-center justify-center px-2">
+                    <span class="text-xs text-gray-400">3h 15m</span>
+                    <div class="w-16 h-0.5 bg-gray-300 relative">
+                        <span class="absolute -top-1.5 right-0">✈</span>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="font-bold text-xl">16:15</div>
+                    <div class="text-xs text-gray-500">TPE 桃園</div>
                 </div>
             </div>
         </div>
@@ -348,6 +395,7 @@
                     spots: [
                         { time: '09:00', type: 'spot', name: 'Fushimi Inari Taisha', desc: '千本鳥居' },
                         { time: '10:00', type: 'shop', mustGo: true, name: 'Chiikawa Mogumogu Honpo', desc: '吉伊卡哇伏見店' },
+                        { time: '11:00', type: 'food', mustGo: true, name: 'Kyoto Ito Okashi', desc: '伊藤軒甜點' },
                         { time: '12:00', type: 'food', mustGo: true, name: 'Nishiki Market', desc: '錦市場吃午餐' },
                         { time: '14:00', type: 'spot', mustGo: true, name: 'Kiyomizu-dera', desc: '清水寺' },
                         { time: '15:30', type: 'shop', name: '2/8b pair keyholder', desc: '可愛吊飾' },

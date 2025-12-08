@@ -1,479 +1,564 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Osaka Go! 2025</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap"
+        rel="stylesheet">
     <style>
-        body { font-family: 'Zen Maru Gothic', sans-serif; transition: background 0.5s ease; }
-        .card { 
-            background: rgba(255, 255, 255, 0.98); 
+        body {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            transition: background 0.5s ease;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(10px);
-            box-shadow: 0 4px 15px rgba(0,0,0, 0.05); 
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
             border-radius: 1.5rem;
             transition: transform 0.2s;
             position: relative;
             z-index: 10;
         }
-        .card:active { transform: scale(0.98); }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
+
+        .card:active {
+            transform: scale(0.98);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
         /* Modal 動畫 */
-        .modal-enter-active, .modal-leave-active { transition: opacity 0.3s; }
-        .modal-enter-from, .modal-leave-to { opacity: 0; }
-        .modal-enter-active .modal-content, .modal-leave-active .modal-content { transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .modal-enter-from .modal-content, .modal-leave-to .modal-content { transform: scale(0.9) translateY(20px); }
+        .modal-enter-active,
+        .modal-leave-active {
+            transition: opacity 0.3s;
+        }
+
+        .modal-enter-from,
+        .modal-leave-to {
+            opacity: 0;
+        }
+
+        .modal-enter-active .modal-content,
+        .modal-leave-active .modal-content {
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-enter-from .modal-content,
+        .modal-leave-to .modal-content {
+            transform: scale(0.9) translateY(20px);
+        }
 
         /* 頁籤選中動畫 */
-        .tab-active { background-color: #fff; color: #ec4899; box-shadow: 0 2px 10px rgba(236, 72, 153, 0.2); transform: scale(1.05); }
+        .tab-active {
+            background-color: #fff;
+            color: #ec4899;
+            box-shadow: 0 2px 10px rgba(236, 72, 153, 0.2);
+            transform: scale(1.05);
+        }
     </style>
 </head>
+
 <body :class="theme.bgGradient">
 
-<div id="app" class="max-w-md mx-auto min-h-screen pb-32 transition-colors duration-500 relative flex flex-col">
-    
-    <header class="bg-white/90 backdrop-blur-md sticky top-0 z-50 shadow-sm rounded-b-[2rem] border-b-4 transition-colors duration-500 flex-shrink-0"
+    <div id="app" class="max-w-md mx-auto min-h-screen pb-32 transition-colors duration-500 relative flex flex-col">
+
+        <header
+            class="bg-white/90 backdrop-blur-md sticky top-0 z-50 shadow-sm rounded-b-[2rem] border-b-4 transition-colors duration-500 flex-shrink-0"
             :class="theme.borderColor">
-        <div class="p-4">
-            <div class="flex justify-between items-center mb-3">
-                <div>
-                    <h1 class="text-3xl font-black tracking-wide flex items-center gap-2" :class="theme.textColor">
-                        Osaka Go!
-                        <span class="text-2xl animate-bounce">{{ theme.icon }}</span>
-                    </h1>
-                    <div class="text-xs font-bold text-gray-400 mt-1 pl-1">12/20 - 12/27 ✨ {{ theme.slogan }}</div>
-                </div>
-                
-                <div class="flex gap-3">
-                    <button @click="showShoppingList = true" class="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm border-2 border-gray-100 bg-white hover:bg-gray-50 transition active:scale-95">
-                        📝
-                    </button>
-                    <button @click="showTranslator = true" class="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm border-2 border-gray-100 bg-white hover:bg-gray-50 transition active:scale-95">
-                        🗣️
-                    </button>
-                </div>
-            </div>
+            <div class="p-4">
+                <div class="flex justify-between items-center mb-3">
+                    <div>
+                        <h1 class="text-3xl font-black tracking-wide flex items-center gap-2" :class="theme.textColor">
+                            Osaka Go!
+                            <span class="text-2xl animate-bounce">{{ theme.icon }}</span>
+                        </h1>
+                        <div class="text-xs font-bold text-gray-400 mt-1 pl-1">12/20 - 12/27 ✨ {{ theme.slogan }}</div>
+                    </div>
 
-            <div class="flex justify-center gap-4 mt-2 bg-gray-50/50 p-2 rounded-2xl border border-gray-100">
-                <button @click="setTheme('chiikawa')" class="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-xl relative transition-transform hover:scale-110" 
+                    <div class="flex gap-3">
+                        <button @click="showShoppingList = true"
+                            class="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm border-2 border-gray-100 bg-white hover:bg-gray-50 transition active:scale-95 relative">
+                            📝
+                            <span v-if="shoppingList.filter(i=>!i.checked).length > 0"
+                                class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center">
+                                {{ shoppingList.filter(i=>!i.checked).length }}
+                            </span>
+                        </button>
+                        <button @click="showTranslator = true"
+                            class="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm border-2 border-gray-100 bg-white hover:bg-gray-50 transition active:scale-95">
+                            🗣️
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex justify-center gap-4 mt-2 bg-gray-50/50 p-2 rounded-2xl border border-gray-100">
+                    <button @click="setTheme('chiikawa')"
+                        class="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-xl relative transition-transform hover:scale-110"
                         :class="{'ring-2 ring-pink-300 ring-offset-2': currentThemeKey === 'chiikawa'}">🐹</button>
-                <button @click="setTheme('hachiware')" class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-xl relative transition-transform hover:scale-110"
+                    <button @click="setTheme('hachiware')"
+                        class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-xl relative transition-transform hover:scale-110"
                         :class="{'ring-2 ring-blue-300 ring-offset-2': currentThemeKey === 'hachiware'}">🐱</button>
-                <button @click="setTheme('usagi')" class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-xl relative transition-transform hover:scale-110"
+                    <button @click="setTheme('usagi')"
+                        class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-xl relative transition-transform hover:scale-110"
                         :class="{'ring-2 ring-yellow-300 ring-offset-2': currentThemeKey === 'usagi'}">🐰</button>
+                </div>
+            </div>
+        </header>
+
+        <div
+            class="mx-4 mt-3 mb-1 p-3 bg-white rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-white px-2 py-1 rounded-lg" :class="theme.btnColor">¥ 匯率</span>
+                <span class="text-sm font-bold text-gray-600">{{ currentRate }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="number" v-model="jpyAmount" placeholder="JPY"
+                    class="w-20 p-1 bg-gray-50 border rounded text-right text-sm">
+                <span class="text-xs text-gray-400">≈</span>
+                <span class="font-bold text-gray-800">${{ twdAmount }}</span>
             </div>
         </div>
-    </header>
 
-    <div class="mx-4 mt-3 mb-1 p-3 bg-white rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
-        <div class="flex items-center gap-2">
-            <span class="text-xs font-bold text-white px-2 py-1 rounded-lg" :class="theme.btnColor">¥ 匯率</span>
-            <span class="text-sm font-bold text-gray-600">{{ currentRate }}</span>
-        </div>
-        <div class="flex items-center gap-2">
-            <input type="number" v-model="jpyAmount" placeholder="JPY" class="w-20 p-1 bg-gray-50 border rounded text-right text-sm">
-            <span class="text-xs text-gray-400">≈</span>
-            <span class="font-bold text-gray-800">${{ twdAmount }}</span>
-        </div>
-    </div>
-
-    <div class="sticky top-[165px] z-40 bg-white/95 backdrop-blur shadow-sm pt-2 pb-2 overflow-x-auto no-scrollbar flex gap-2 px-4 border-b border-gray-100" ref="tabContainer">
-        <button v-for="(day, index) in itinerary" :key="index"
-                @click="activeDayIndex = index"
+        <div class="sticky top-[165px] z-40 bg-white/95 backdrop-blur shadow-sm pt-2 pb-2 overflow-x-auto no-scrollbar flex gap-2 px-4 border-b border-gray-100"
+            ref="tabContainer">
+            <button v-for="(day, index) in itinerary" :key="index" @click="activeDayIndex = index"
                 :id="'day-tab-' + index"
                 class="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-all border border-transparent whitespace-nowrap"
                 :class="activeDayIndex === index ? 'bg-gray-800 text-white shadow-lg scale-105' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'">
-            {{ day.date.split(' ')[0] }}
-            <span class="block text-[10px] font-normal opacity-80">{{ day.area }}</span>
-        </button>
-    </div>
-
-    <div class="p-4 flex-1 overflow-y-auto">
-        
-        <div class="mb-4 p-3 bg-blue-50 rounded-xl border border-blue-100 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <span class="text-lg">🏨</span>
-                <div class="text-xs text-blue-800">
-                    <span class="font-bold block">今晚住：{{ getHotelName(activeDayIndex) }}</span>
-                    <a :href="getMapLink(getHotelName(activeDayIndex))" target="_blank" class="underline opacity-70">導航去飯店</a>
-                </div>
-            </div>
+                {{ day.date.split(' ')[0] }}
+                <span class="block text-[10px] font-normal opacity-80">{{ day.area }}</span>
+            </button>
         </div>
 
-        <div v-if="activeDayIndex === 0" class="card mb-4 p-4 border-l-[6px] border-purple-400 bg-purple-50">
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="font-bold text-purple-800">✈️ 去程航班 (星宇航空)</h3>
-                <span class="text-xs bg-white px-2 py-1 rounded text-purple-600 font-bold">JX822</span>
-            </div>
-            <div class="flex justify-between text-sm text-gray-700 font-mono">
-                <div class="text-center">
-                    <div class="font-bold text-xl">09:20</div>
-                    <div class="text-xs text-gray-500">TPE 桃園</div>
-                </div>
-                <div class="flex flex-col items-center justify-center px-2">
-                    <span class="text-xs text-gray-400">2h 30m</span>
-                    <div class="w-16 h-0.5 bg-gray-300 relative">
-                        <span class="absolute -top-1.5 right-0">✈</span>
+        <div class="p-4 flex-1 overflow-y-auto">
+
+            <div class="mb-4 p-3 bg-blue-50 rounded-xl border border-blue-100 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">🏨</span>
+                    <div class="text-xs text-blue-800">
+                        <span class="font-bold block">今晚住：{{ getHotelName(activeDayIndex) }}</span>
+                        <a :href="getMapLink(getHotelName(activeDayIndex))" target="_blank"
+                            class="underline opacity-70">導航去飯店</a>
                     </div>
                 </div>
-                <div class="text-center">
-                    <div class="font-bold text-xl">12:50</div>
-                    <div class="text-xs text-gray-500">KIX 關西</div>
-                </div>
             </div>
-        </div>
 
-        <div v-if="activeDayIndex === 7" class="card mb-4 p-4 border-l-[6px] border-purple-400 bg-purple-50">
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="font-bold text-purple-800">✈️ 回程航班 (星宇航空)</h3>
-                <span class="text-xs bg-white px-2 py-1 rounded text-purple-600 font-bold">JX823</span>
-            </div>
-            <div class="flex justify-between text-sm text-gray-700 font-mono">
-                <div class="text-center">
-                    <div class="font-bold text-xl">14:00</div>
-                    <div class="text-xs text-gray-500">KIX 關西</div>
+            <div v-if="activeDayIndex === 0" class="card mb-4 p-4 border-l-[6px] border-purple-400 bg-purple-50">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-purple-800">✈️ 去程航班 (星宇航空)</h3>
+                    <span class="text-xs bg-white px-2 py-1 rounded text-purple-600 font-bold">JX822</span>
                 </div>
-                <div class="flex flex-col items-center justify-center px-2">
-                    <span class="text-xs text-gray-400">3h 15m</span>
-                    <div class="w-16 h-0.5 bg-gray-300 relative">
-                        <span class="absolute -top-1.5 right-0">✈</span>
+                <div class="flex justify-between text-sm text-gray-700 font-mono">
+                    <div class="text-center">
+                        <div class="font-bold text-xl">09:20</div>
+                        <div class="text-xs text-gray-500">TPE 桃園</div>
                     </div>
-                </div>
-                <div class="text-center">
-                    <div class="font-bold text-xl">16:15</div>
-                    <div class="text-xs text-gray-500">TPE 桃園</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="space-y-4 pb-10">
-            <div v-if="getMorningStart(activeDayIndex)" class="relative pl-8 flex items-center">
-                <div class="absolute left-[29px] top-1/2 bottom-[-20px] w-0.5 border-l-2 border-dashed border-gray-300"></div>
-                <a :href="getPointToPointLink(getMorningStart(activeDayIndex), itinerary[activeDayIndex].spots[0].name)" target="_blank"
-                   class="relative z-10 flex items-center gap-2 bg-white border border-gray-200 shadow-sm px-4 py-2 rounded-full text-xs font-bold text-gray-600 hover:text-blue-600 transition ml-6 w-full justify-center">
-                    <span class="text-lg">🌅</span>
-                    <span>飯店出發</span>
-                    <span class="text-gray-300">➜</span>
-                    <span class="truncate max-w-[120px]">{{ itinerary[activeDayIndex].spots[0].name }}</span>
-                </a>
-            </div>
-
-            <div v-for="(item, i) in itinerary[activeDayIndex].spots" :key="i" class="relative">
-                
-                <div class="card p-4 border-l-[6px]" 
-                     :class="item.mustGo ? theme.borderColor : 'border-l-gray-300'"
-                     @click.stop="openMap(item.name)">
-                    <div class="flex gap-3">
-                        <div class="flex flex-col items-center gap-1 min-w-[50px]">
-                            <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">{{ item.time }}</span>
-                            <div class="text-2xl mt-1">{{ getTypeIcon(item.type) }}</div>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-start">
-                                <h3 class="font-bold text-gray-800 leading-tight">{{ item.name }}</h3>
-                                <span v-if="item.mustGo" class="shrink-0 text-[10px] text-white px-2 py-0.5 rounded-full shadow-sm ml-2" :class="theme.btnColor">必去</span>
-                            </div>
-                            <p class="text-sm text-gray-500 mt-1">{{ item.desc }}</p>
-                            
-                            <div v-if="item.ticket" class="mt-2">
-                                <a :href="item.ticket.url" target="_blank" @click.stop 
-                                   class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold w-full justify-center border"
-                                   :class="item.ticket.booked ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-500 border-red-200'">
-                                    <span v-if="item.ticket.booked">✅ {{ item.ticket.source }}</span>
-                                    <span v-else>🎫 前往購買</span>
-                                </a>
-                            </div>
+                    <div class="flex flex-col items-center justify-center px-2"><span class="text-xs text-gray-400">2h
+                            30m</span>
+                        <div class="w-16 h-0.5 bg-gray-300 relative"><span class="absolute -top-1.5 right-0">✈</span>
                         </div>
                     </div>
+                    <div class="text-center">
+                        <div class="font-bold text-xl">12:50</div>
+                        <div class="text-xs text-gray-500">KIX 關西</div>
+                    </div>
                 </div>
+            </div>
 
-                <div v-if="i < itinerary[activeDayIndex].spots.length - 1" class="relative pl-8 py-2 flex items-center">
-                    <div class="absolute left-[29px] top-0 bottom-0 w-0.5 border-l-2 border-dashed border-gray-300"></div>
-                    <a :href="getPointToPointLink(item.name, itinerary[activeDayIndex].spots[i+1].name)" target="_blank"
-                       class="relative z-10 flex items-center gap-2 bg-white border border-gray-200 shadow-sm px-3 py-1.5 rounded-full text-xs font-bold text-gray-400 hover:text-blue-500 transition ml-6 w-full justify-center">
-                        <span>🚶/🚇</span>
-                        <span>前往下個地點</span>
+            <div v-if="activeDayIndex === 7" class="card mb-4 p-4 border-l-[6px] border-purple-400 bg-purple-50">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-purple-800">✈️ 回程航班 (星宇航空)</h3>
+                    <span class="text-xs bg-white px-2 py-1 rounded text-purple-600 font-bold">JX823</span>
+                </div>
+                <div class="flex justify-between text-sm text-gray-700 font-mono">
+                    <div class="text-center">
+                        <div class="font-bold text-xl">14:00</div>
+                        <div class="text-xs text-gray-500">KIX 關西</div>
+                    </div>
+                    <div class="flex flex-col items-center justify-center px-2"><span class="text-xs text-gray-400">3h
+                            15m</span>
+                        <div class="w-16 h-0.5 bg-gray-300 relative"><span class="absolute -top-1.5 right-0">✈</span>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="font-bold text-xl">16:15</div>
+                        <div class="text-xs text-gray-500">TPE 桃園</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-4 pb-10">
+                <div v-if="getMorningStart(activeDayIndex)" class="relative pl-8 flex items-center">
+                    <div
+                        class="absolute left-[29px] top-1/2 bottom-[-20px] w-0.5 border-l-2 border-dashed border-gray-300">
+                    </div>
+                    <a :href="getPointToPointLink(getMorningStart(activeDayIndex), itinerary[activeDayIndex].spots[0].name)"
+                        target="_blank"
+                        class="relative z-10 flex items-center gap-2 bg-white border border-gray-200 shadow-sm px-4 py-2 rounded-full text-xs font-bold text-gray-600 hover:text-blue-600 transition ml-6 w-full justify-center">
+                        <span class="text-lg">🌅</span>
+                        <span>飯店出發</span>
+                        <span class="text-gray-300">➜</span>
+                        <span class="truncate max-w-[120px]">{{ itinerary[activeDayIndex].spots[0].name }}</span>
                     </a>
                 </div>
+
+                <div v-for="(item, i) in itinerary[activeDayIndex].spots" :key="i" class="relative">
+                    <div class="card p-4 border-l-[6px]" :class="item.mustGo ? theme.borderColor : 'border-l-gray-300'"
+                        @click.stop="openMap(item.name)">
+                        <div class="flex gap-3">
+                            <div class="flex flex-col items-center gap-1 min-w-[50px]">
+                                <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">{{ item.time
+                                    }}</span>
+                                <div class="text-2xl mt-1">{{ getTypeIcon(item.type) }}</div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="font-bold text-gray-800 leading-tight">{{ item.name }}</h3>
+                                    <span v-if="item.mustGo"
+                                        class="shrink-0 text-[10px] text-white px-2 py-0.5 rounded-full shadow-sm ml-2"
+                                        :class="theme.btnColor">必去</span>
+                                </div>
+                                <p class="text-sm text-gray-500 mt-1 whitespace-pre-wrap">{{ item.desc }}</p>
+
+                                <div v-if="item.ticket" class="mt-2">
+                                    <a :href="item.ticket.url" target="_blank" @click.stop
+                                        class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold w-full justify-center border"
+                                        :class="item.ticket.booked ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-500 border-red-200'">
+                                        <span v-if="item.ticket.booked">✅ {{ item.ticket.source }}</span>
+                                        <span v-else>🎫 前往購買</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="i < itinerary[activeDayIndex].spots.length - 1"
+                        class="relative pl-8 py-2 flex items-center">
+                        <div class="absolute left-[29px] top-0 bottom-0 w-0.5 border-l-2 border-dashed border-gray-300">
+                        </div>
+                        <a :href="getPointToPointLink(item.name, itinerary[activeDayIndex].spots[i+1].name)"
+                            target="_blank"
+                            class="relative z-10 flex items-center gap-2 bg-white border border-gray-200 shadow-sm px-3 py-1.5 rounded-full text-xs font-bold text-gray-400 hover:text-blue-500 transition ml-6 w-full justify-center">
+                            <span>🚶/🚇</span>
+                            <span>前往下個地點</span>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <transition name="modal">
+            <div v-if="showShoppingList"
+                class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center px-4 py-6"
+                style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+                <div class="absolute inset-0" @click="showShoppingList = false"></div>
+                <div class="modal-content w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden relative border-4 flex flex-col max-h-[80vh]"
+                    :class="theme.borderColor">
+                    <div class="p-4 border-b flex justify-between items-center" :class="theme.lightBg">
+                        <h3 class="font-bold text-lg flex items-center gap-2" :class="theme.textColor">📝 必買清單</h3>
+                        <button @click="showShoppingList = false" class="text-2xl font-bold text-gray-400">×</button>
+                    </div>
+
+                    <div class="p-3 bg-gray-50 border-b flex gap-2">
+                        <input type="text" v-model="newItemText" placeholder="輸入商品..."
+                            class="flex-1 p-2 rounded-lg border text-sm" @keyup.enter="addShoppingItem">
+                        <button @click="addShoppingItem" class="px-4 py-2 rounded-lg text-white font-bold text-sm"
+                            :class="theme.btnColor">＋</button>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto p-4 space-y-3">
+                        <div v-for="(item, idx) in shoppingList" :key="idx"
+                            class="flex items-start gap-3 p-3 rounded-xl border transition-all"
+                            :class="item.checked ? 'bg-gray-100 border-gray-200 opacity-60' : 'bg-white border-gray-200 shadow-sm'">
+                            <input type="checkbox" v-model="item.checked" class="mt-1 w-5 h-5 accent-pink-500">
+                            <div class="flex-1">
+                                <div class="font-bold text-gray-800" :class="{'line-through': item.checked}">{{
+                                    item.text }}</div>
+                                <div class="text-xs text-gray-400 mt-0.5" v-if="item.note">{{ item.note }}</div>
+                                <div v-if="item.image" class="mt-2 relative group">
+                                    <img :src="item.image" class="w-20 h-20 object-cover rounded-lg border">
+                                    <button @click="removeImage(idx)"
+                                        class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md">×</button>
+                                </div>
+                                <label v-else
+                                    class="mt-1 inline-flex items-center gap-1 text-xs text-blue-500 cursor-pointer">
+                                    📷 截圖/拍照
+                                    <input type="file" accept="image/*" class="hidden"
+                                        @change="(e) => handleItemImage(e, idx)">
+                                </label>
+                            </div>
+                            <button @click="shoppingList.splice(idx, 1)"
+                                class="text-gray-300 hover:text-red-500">×</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <transition name="modal">
+            <div v-if="showTranslator"
+                class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center px-4 py-6"
+                style="background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);">
+                <div class="absolute inset-0" @click="showTranslator = false"></div>
+                <div class="modal-content w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden relative border-4"
+                    :class="theme.borderColor">
+                    <div class="p-4 flex justify-between items-center border-b" :class="theme.lightBg">
+                        <h3 class="font-bold text-lg flex items-center gap-2" :class="theme.textColor">🗣️ 日語小幫手</h3>
+                        <button @click="showTranslator = false"
+                            class="text-gray-400 hover:text-gray-600 text-2xl font-bold">×</button>
+                    </div>
+                    <div class="flex p-2 gap-2 overflow-x-auto no-scrollbar bg-gray-50">
+                        <button v-for="cat in ['用餐', '交通', '購物', '通用']" :key="cat" @click="currentCategory = cat"
+                            class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap"
+                            :class="currentCategory === cat ? theme.btnColor + ' text-white shadow-md' : 'bg-white text-gray-500 border'">{{
+                            cat }}</button>
+                    </div>
+                    <div class="h-[300px] overflow-y-auto p-4 space-y-3 bg-gray-50">
+                        <div v-for="(phrase, idx) in currentPhrases" :key="idx"
+                            class="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between active:scale-95 transition-transform"
+                            @click="speakJapanese(phrase.jp)">
+                            <div>
+                                <div class="font-bold text-gray-800">{{ phrase.tw }}</div>
+                                <div class="text-xs text-gray-400 font-mono mt-1">{{ phrase.romaji }}</div>
+                                <div class="text-sm text-gray-600 mt-0.5">{{ phrase.jp }}</div>
+                            </div>
+                            <button
+                                class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xl shadow-sm group-hover:bg-blue-100">🔊</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
     </div>
 
-    <transition name="modal">
-        <div v-if="showShoppingList" class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center px-4 py-6" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
-            <div class="absolute inset-0" @click="showShoppingList = false"></div>
-            <div class="modal-content w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden relative border-4 flex flex-col max-h-[80vh]" :class="theme.borderColor">
-                <div class="p-4 border-b flex justify-between items-center" :class="theme.lightBg">
-                    <h3 class="font-bold text-lg flex items-center gap-2" :class="theme.textColor">📝 必買清單</h3>
-                    <button @click="showShoppingList = false" class="text-2xl font-bold text-gray-400">×</button>
-                </div>
-                
-                <div class="p-3 bg-gray-50 border-b flex gap-2">
-                    <input type="text" v-model="newItemText" placeholder="輸入商品..." class="flex-1 p-2 rounded-lg border text-sm" @keyup.enter="addShoppingItem">
-                    <button @click="addShoppingItem" class="px-4 py-2 rounded-lg text-white font-bold text-sm" :class="theme.btnColor">＋</button>
-                </div>
+    <script>
+        const { createApp, ref, computed, onMounted } = Vue;
 
-                <div class="flex-1 overflow-y-auto p-4 space-y-3">
-                    <div v-if="shoppingList.length === 0" class="text-center text-gray-400 py-10">還沒加東西喔！</div>
-                    <div v-for="(item, idx) in shoppingList" :key="idx" class="flex items-start gap-3 p-3 rounded-xl border transition-all" :class="item.checked ? 'bg-gray-100 border-gray-200 opacity-60' : 'bg-white border-gray-200 shadow-sm'">
-                        <input type="checkbox" v-model="item.checked" class="mt-1 w-5 h-5 accent-pink-500">
-                        <div class="flex-1">
-                            <div class="font-bold text-gray-800" :class="{'line-through': item.checked}">{{ item.text }}</div>
-                            <div v-if="item.image" class="mt-2 relative group">
-                                <img :src="item.image" class="w-20 h-20 object-cover rounded-lg border">
-                                <button @click="removeImage(idx)" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md">×</button>
-                            </div>
-                            <label v-else class="mt-1 inline-flex items-center gap-1 text-xs text-blue-500 cursor-pointer">
-                                📷 加圖片
-                                <input type="file" accept="image/*" class="hidden" @change="(e) => handleItemImage(e, idx)">
-                            </label>
-                        </div>
-                        <button @click="shoppingList.splice(idx, 1)" class="text-gray-300 hover:text-red-500">×</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </transition>
+        const AID = '27749';
+        const appendAID = (url) => url.includes('aid=') ? url : `${url}${url.includes('?') ? '&' : '?'}aid=${AID}`;
 
-    <transition name="modal">
-        <div v-if="showTranslator" class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center px-4 py-6" style="background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);">
-            <div class="absolute inset-0" @click="showTranslator = false"></div>
-            <div class="modal-content w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden relative border-4" :class="theme.borderColor">
-                <div class="p-4 flex justify-between items-center border-b" :class="theme.lightBg">
-                    <h3 class="font-bold text-lg flex items-center gap-2" :class="theme.textColor">🗣️ 日語小幫手</h3>
-                    <button @click="showTranslator = false" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">×</button>
-                </div>
-                <div class="flex p-2 gap-2 overflow-x-auto no-scrollbar bg-gray-50">
-                    <button v-for="cat in ['用餐', '交通', '購物', '通用']" :key="cat" @click="currentCategory = cat" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap" :class="currentCategory === cat ? theme.btnColor + ' text-white shadow-md' : 'bg-white text-gray-500 border'">{{ cat }}</button>
-                </div>
-                <div class="h-[300px] overflow-y-auto p-4 space-y-3 bg-gray-50">
-                    <div v-for="(phrase, idx) in currentPhrases" :key="idx" class="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between active:scale-95 transition-transform" @click="speakJapanese(phrase.jp)">
-                        <div>
-                            <div class="font-bold text-gray-800">{{ phrase.tw }}</div>
-                            <div class="text-xs text-gray-400 font-mono mt-1">{{ phrase.romaji }}</div>
-                            <div class="text-sm text-gray-600 mt-0.5">{{ phrase.jp }}</div>
-                        </div>
-                        <button class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xl shadow-sm group-hover:bg-blue-100">🔊</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </transition>
+        const THEMES = {
+            chiikawa: { name: '吉伊', icon: '🐹', slogan: 'WakuWaku', bgGradient: 'bg-gradient-to-br from-pink-50 via-white to-pink-100', textColor: 'text-pink-500', borderColor: 'border-pink-300', btnColor: 'bg-pink-400', lightBg: 'bg-pink-50', lightBorder: 'border-pink-100' },
+            hachiware: { name: '小八', icon: '🐱', slogan: 'Nantoka-nare', bgGradient: 'bg-gradient-to-br from-blue-50 via-white to-blue-100', textColor: 'text-blue-500', borderColor: 'border-blue-300', btnColor: 'bg-blue-400', lightBg: 'bg-blue-50', lightBorder: 'border-blue-100' },
+            usagi: { name: '烏薩奇', icon: '🐰', slogan: 'Ura!', bgGradient: 'bg-gradient-to-br from-yellow-50 via-white to-orange-100', textColor: 'text-yellow-600', borderColor: 'border-yellow-400', btnColor: 'bg-yellow-400', lightBg: 'bg-yellow-50', lightBorder: 'border-yellow-200' }
+        };
 
-</div>
+        const JP_DATA = {
+            '用餐': [
+                { tw: '我訂位了 (Hsu)', jp: '予約した徐 (シュー) です', romaji: 'Yoyaku shita Hsu desu' },
+                { tw: '我要這個', jp: 'これをください', romaji: 'Kore o kudasai' },
+                { tw: '結帳', jp: 'お会計をお願いします', romaji: 'Okaikei onegaishimasu' },
+                { tw: '有禁菸席嗎？', jp: '禁煙席はありますか？', romaji: 'Kinen seki wa arimasu ka?' }
+            ],
+            '交通': [{ tw: '車站哪裡？', jp: '駅はどこですか？', romaji: 'Eki wa doko?' }, { tw: '我想去這裡', jp: 'ここに行きたいです', romaji: 'Koko ni ikitai' }, { tw: '能用IC卡嗎？', jp: 'ICカードは使えますか？', romaji: 'IC kado wa tsukaemasu ka?' }],
+            '購物': [{ tw: '多少錢？', jp: 'いくらですか？', romaji: 'Ikura desu ka?' }, { tw: '可以免稅嗎？', jp: '免税できますか？', romaji: 'Menzei dekimasu ka?' }, { tw: '請給我袋子', jp: '袋をください', romaji: 'Fukuro o kudasai' }],
+            '通用': [{ tw: '謝謝', jp: 'ありがとうございます', romaji: 'Arigatou' }, { tw: '不好意思', jp: 'すみません', romaji: 'Sumimasen' }, { tw: '廁所？', jp: 'トイレはどこですか？', romaji: 'Toire wa doko?' }]
+        };
 
-<script>
-    const { createApp, ref, computed, onMounted } = Vue;
+        createApp({
+            setup() {
+                const currentThemeKey = ref('hachiware');
+                const activeDayIndex = ref(0); // 預設第一天
+                const jpyAmount = ref('');
+                const rate = ref(0.22);
+                const currentRate = ref('0.2200');
+                const showTranslator = ref(false);
+                const currentCategory = ref('用餐');
 
-    const AID = '27749';
-    const appendAID = (url) => url.includes('aid=') ? url : `${url}${url.includes('?') ? '&' : '?'}aid=${AID}`;
+                // 🌟 購物清單 (已加入媽媽的需求) 🌟
+                const showShoppingList = ref(false);
+                const newItemText = ref('');
+                const shoppingList = ref([
+                    { text: '雅詩蘭黛 年輕無敵膠原霜 (75ml)', checked: false, note: '給媽媽 (Mom)' },
+                    { text: '雅詩蘭黛 特潤超導全方位修護露 (50ml)', checked: false, note: '給媽媽 (小棕瓶)' },
+                    { text: 'EVE 止痛藥 (藍色)', checked: false, note: '' },
+                    { text: '合利他命 EX', checked: false, note: '' }
+                ]);
 
-    const THEMES = {
-        chiikawa: { name: '吉伊', icon: '🐹', slogan: 'WakuWaku', bgGradient: 'bg-gradient-to-br from-pink-50 via-white to-pink-100', textColor: 'text-pink-500', borderColor: 'border-pink-300', btnColor: 'bg-pink-400', lightBg: 'bg-pink-50', lightBorder: 'border-pink-100' },
-        hachiware: { name: '小八', icon: '🐱', slogan: 'Nantoka-nare', bgGradient: 'bg-gradient-to-br from-blue-50 via-white to-blue-100', textColor: 'text-blue-500', borderColor: 'border-blue-300', btnColor: 'bg-blue-400', lightBg: 'bg-blue-50', lightBorder: 'border-blue-100' },
-        usagi: { name: '烏薩奇', icon: '🐰', slogan: 'Ura!', bgGradient: 'bg-gradient-to-br from-yellow-50 via-white to-orange-100', textColor: 'text-yellow-600', borderColor: 'border-yellow-400', btnColor: 'bg-yellow-400', lightBg: 'bg-yellow-50', lightBorder: 'border-yellow-200' }
-    };
+                const theme = computed(() => THEMES[currentThemeKey.value]);
+                const setTheme = (key) => currentThemeKey.value = key;
+                const currentPhrases = computed(() => JP_DATA[currentCategory.value]);
+                const twdAmount = computed(() => !jpyAmount.value ? 0 : Math.ceil(jpyAmount.value * rate.value));
 
-    const JP_DATA = {
-        '用餐': [
-            { tw: '我訂位了 (Hsü)', jp: '予約した徐 (シュー) です', romaji: 'Yoyaku shita Hsu desu' },
-            { tw: '我要這個', jp: 'これをください', romaji: 'Kore o kudasai' },
-            { tw: '結帳', jp: 'お会計をお願いします', romaji: 'Okaikei onegaishimasu' },
-            { tw: '有禁菸席嗎？', jp: '禁煙席はありますか？', romaji: 'Kinen seki wa arimasu ka?' }
-        ],
-        '交通': [{ tw: '車站哪裡？', jp: '駅はどこですか？', romaji: 'Eki wa doko?' }, { tw: '我想去這裡', jp: 'ここに行きたいです', romaji: 'Koko ni ikitai' }, { tw: '能用IC卡嗎？', jp: 'ICカードは使えますか？', romaji: 'IC kado wa tsukaemasu ka?' }],
-        '購物': [{ tw: '多少錢？', jp: 'いくらですか？', romaji: 'Ikura desu ka?' }, { tw: '可以免稅嗎？', jp: '免税できますか？', romaji: 'Menzei dekimasu ka?' }, { tw: '請給我袋子', jp: '袋をください', romaji: 'Fukuro o kudasai' }],
-        '通用': [{ tw: '謝謝', jp: 'ありがとうございます', romaji: 'Arigatou' }, { tw: '不好意思', jp: 'すみません', romaji: 'Sumimasen' }, { tw: '廁所？', jp: 'トイレはどこですか？', romaji: 'Toire wa doko?' }]
-    };
+                // Klook Links
+                const LINKS = {
+                    HARUKA: appendAID('https://www.klook.com/zh-TW/activity/18400-jr-haruka-airport-express-train-tickets-osaka/'),
+                    AMANOHASHIDATE: appendAID('https://www.klook.com/zh-TW/activity/25686-amanohashidate-ine-boathouse-miyama-kayabuki-no-sato-day-tour-osaka/'),
+                    UMEDA_SKY: appendAID('https://www.klook.com/zh-TW/activity/1301-umeda-sky-building-osaka/'),
+                    RAPIT: appendAID('https://www.klook.com/zh-TW/activity/599-kansai-airport-nankai-line-osaka/'),
+                    HARUKAS: appendAID('https://www.klook.com/zh-TW/activity/2424-harukas-300-observatory-ticket-osaka/')
+                };
 
-    createApp({
-        setup() {
-            const currentThemeKey = ref('hachiware');
-            const activeDayIndex = ref(0); // 預設第一天
-            const jpyAmount = ref('');
-            const rate = ref(0.22);
-            const currentRate = ref('0.2200');
-            const showTranslator = ref(false);
-            const currentCategory = ref('用餐');
-            
-            // 🌟 購物清單相關 🌟
-            const showShoppingList = ref(false);
-            const newItemText = ref('');
-            const shoppingList = ref([
-                { text: 'EVE 止痛藥 (藍色)', checked: false },
-                { text: '合利他命 EX', checked: false }
-            ]);
+                const addShoppingItem = () => {
+                    if (newItemText.value.trim()) {
+                        shoppingList.value.push({ text: newItemText.value, checked: false, image: null, note: '' });
+                        newItemText.value = '';
+                    }
+                };
 
-            const theme = computed(() => THEMES[currentThemeKey.value]);
-            const setTheme = (key) => currentThemeKey.value = key;
-            const currentPhrases = computed(() => JP_DATA[currentCategory.value]);
-            const twdAmount = computed(() => !jpyAmount.value ? 0 : Math.ceil(jpyAmount.value * rate.value));
+                const handleItemImage = (e, idx) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => shoppingList.value[idx].image = e.target.result;
+                        reader.readAsDataURL(file);
+                    }
+                };
+                const removeImage = (idx) => shoppingList.value[idx].image = null;
 
-            // Klook Links
-            const LINKS = {
-                HARUKA: appendAID('https://www.klook.com/zh-TW/activity/18400-jr-haruka-airport-express-train-tickets-osaka/'),
-                AMANOHASHIDATE: appendAID('https://www.klook.com/zh-TW/activity/25686-amanohashidate-ine-boathouse-miyama-kayabuki-no-sato-day-tour-osaka/'),
-                UMEDA_SKY: appendAID('https://www.klook.com/zh-TW/activity/1301-umeda-sky-building-osaka/'),
-                RAPIT: appendAID('https://www.klook.com/zh-TW/activity/599-kansai-airport-nankai-line-osaka/'),
-                HARUKAS: appendAID('https://www.klook.com/zh-TW/activity/2424-harukas-300-observatory-ticket-osaka/')
-            };
+                const speakJapanese = (text) => {
+                    if ('speechSynthesis' in window) {
+                        const u = new SpeechSynthesisUtterance(text);
+                        u.lang = 'ja-JP'; u.rate = 0.9;
+                        window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
+                    }
+                };
 
-            const addShoppingItem = () => {
-                if(newItemText.value.trim()) {
-                    shoppingList.value.push({ text: newItemText.value, checked: false, image: null });
-                    newItemText.value = '';
-                }
-            };
+                const getPointToPointLink = (origin, dest) => `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}&travelmode=transit&dirflg=r`;
+                const getMapLink = (q) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+                const openMap = (q) => window.open(getMapLink(q), '_blank');
 
-            const handleItemImage = (e, idx) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => shoppingList.value[idx].image = e.target.result;
-                    reader.readAsDataURL(file);
-                }
-            };
-            const removeImage = (idx) => shoppingList.value[idx].image = null;
+                const getMorningStart = (dayIndex) => {
+                    if (dayIndex === 0) return null;
+                    if (dayIndex <= 4) return 'VIA INN PRIME KYOTOEKI HACHIJOGUCHI';
+                    return 'Sotetsu Fresa Inn Osaka-Namba';
+                };
+                const getHotelName = (dayIndex) => dayIndex <= 4 ? '京都 VIA INN PRIME 八條口' : '大阪 相鐵 Fresa Inn 難波';
 
-            const speakJapanese = (text) => {
-                if ('speechSynthesis' in window) {
-                    const u = new SpeechSynthesisUtterance(text);
-                    u.lang = 'ja-JP'; u.rate = 0.9;
-                    window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
-                }
-            };
+                const getTypeIcon = (t) => ({ food: '🍜', shop: '🛍️', spot: '⛩️', cafe: '☕', transport: '🚐' }[t] || '📍');
 
-            const getPointToPointLink = (origin, dest) => `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}&travelmode=transit&dirflg=r`;
-            const getMapLink = (q) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
-            const openMap = (q) => window.open(getMapLink(q), '_blank');
+                // 🌟 行程資料 (含接送與訂位) 🌟
+                const itinerary = ref([
+                    {
+                        date: '12/20 (六)', area: '京都車站',
+                        spots: [
+                            { time: '06:15', type: 'transport', name: '機場接送 (出發)', desc: '坪頂路52巷16號 上車 -> 桃園機場T1 ($1000/已匯)', mustGo: true },
+                            { time: '12:50', type: 'spot', name: 'Kansai Airport', desc: '入境 / 領取 Haruka', ticket: { source: 'Klook', url: LINKS.HARUKA, booked: true } },
+                            { time: '15:00', type: 'spot', name: 'VIA INN PRIME 京都八條口', desc: 'Check-in 放行李' },
+                            { time: '17:00', type: 'food', mustGo: true, name: 'Sushi no Musashi', desc: '迴轉壽司 (車站內)' },
+                            { time: '19:00', type: 'shop', name: 'Kyoto Station', desc: '大階梯 / 聖誕樹' }
+                        ]
+                    },
+                    {
+                        date: '12/21 (日)', area: '嵐山/金閣寺',
+                        spots: [
+                            { time: '09:00', type: 'spot', mustGo: true, name: 'Arashiyama Bamboo Forest', desc: '嵐山竹林 (早起!)' },
+                            { time: '11:00', type: 'food', name: 'Arashiyama Main Street', desc: '午餐：廣川鰻魚或小吃' },
+                            { time: '13:30', type: 'spot', mustGo: true, name: 'Kinkaku-ji', desc: '金閣寺 (搭計程車/巴士)' },
+                            { time: '16:00', type: 'spot', name: 'Kyoto Station', desc: '回市區' }
+                        ]
+                    },
+                    {
+                        date: '12/22 (一)', area: '海之京都',
+                        spots: [
+                            { time: '07:40', type: 'spot', mustGo: true, name: 'Kyoto Station Hachijo Exit', desc: '一日遊集合 (確認信箱)', ticket: { source: 'Klook', url: LINKS.AMANOHASHIDATE, booked: false } },
+                            { time: '10:30', type: 'spot', name: 'Amanohashidate', desc: '天橋立飛龍' },
+                            { time: '13:00', type: 'spot', name: 'Ine no Funaya', desc: '伊根舟屋餵海鷗' },
+                            { time: '19:00', type: 'food', name: 'Kyoto Ramen Koji', desc: '拉麵小路' }
+                        ]
+                    },
+                    {
+                        date: '12/23 (二)', area: '洛東精華',
+                        spots: [
+                            { time: '09:00', type: 'spot', name: 'Fushimi Inari Taisha', desc: '千本鳥居' },
+                            { time: '10:00', type: 'shop', mustGo: true, name: 'Chiikawa Mogumogu Honpo', desc: '吉伊卡哇伏見店' },
+                            { time: '11:00', type: 'food', mustGo: true, name: 'Kyoto Ito Okashi', desc: '伊藤軒甜點' },
+                            { time: '12:00', type: 'food', mustGo: true, name: 'Nishiki Market', desc: '錦市場吃午餐' },
+                            { time: '14:00', type: 'spot', mustGo: true, name: 'Kiyomizu-dera', desc: '清水寺' },
+                            { time: '15:30', type: 'shop', name: '2/8b pair keyholder', desc: '可愛吊飾' },
+                            { time: '16:30', type: 'cafe', name: 'Blue Bottle Kyoto Kiyamachi', desc: '藍瓶咖啡' }
+                        ]
+                    },
+                    {
+                        date: '12/24 (三)', area: '大阪移動日',
+                        spots: [
+                            { time: '10:00', type: 'spot', name: 'Sotetsu Fresa Inn Osaka-Namba', desc: '移動至大阪 Check-in' },
+                            { time: '11:00', type: 'spot', mustGo: true, name: 'Osaka Castle', desc: '大阪城' },
+                            { time: '13:30', type: 'food', mustGo: true, name: 'Ichiran Namba', desc: '一蘭拉麵' },
+                            { time: '15:00', type: 'shop', mustGo: true, name: 'Chiikawa Land Shinsaibashi', desc: 'PARCO 吉伊卡哇' },
+                            { time: '19:00', type: 'food', mustGo: true, name: 'Shabucho', desc: '和牛涮涮鍋' }
+                        ]
+                    },
+                    {
+                        date: '12/25 (四)', area: '梅田/聖誕',
+                        spots: [
+                            { time: '10:00', type: 'shop', mustGo: true, name: 'Standard Products Umeda', desc: '梅田DT塔B2 (還有DAISO)' },
+                            { time: '11:30', type: 'shop', mustGo: true, name: '3COINS +plus LUCUA', desc: '300圓雜貨' },
+                            { time: '12:30', type: 'food', name: 'Gyuta Honjin LINKS UMEDA', desc: '午餐：隨意吃 (不用太飽)' },
+                            { time: '14:00', type: 'shop', mustGo: true, name: 'Kiddyland Osaka Umeda', desc: '吉伊卡哇周邊' },
+                            { time: '15:40', type: 'spot', name: 'Umeda Station', desc: '⚠️ 準備搭地鐵御堂筋線回難波' },
+                            { time: '16:50', type: 'food', mustGo: true, name: 'Yakiniku Rikimaru Dotonbori', desc: '【已預約 16:50 ✅】燒肉力丸 道頓堀店', ticket: { source: '訂位信', url: '#', booked: true } },
+                            { time: '19:30', type: 'spot', name: 'Dotonbori Glico Man', desc: '吃飽散步看跑跑人' },
+                            { time: '21:00', type: 'food', name: 'Mugi to Tori', desc: '宵夜：雞白湯拉麵' }
+                        ]
+                    },
+                    {
+                        date: '12/26 (五)', area: '難波/阿倍野',
+                        spots: [
+                            { time: '10:00', type: 'food', mustGo: true, name: 'CANELE du JAPON', desc: '可麗露' },
+                            { time: '12:30', type: 'food', mustGo: true, name: 'Unagi no Nakasho', desc: '鰻魚飯' },
+                            { time: '14:30', type: 'shop', name: 'Namba Parks', desc: '逛街補貨' },
+                            { time: '16:00', type: 'spot', mustGo: true, name: 'Tsutenkaku', desc: '通天閣 (新世界)' },
+                            { time: '17:00', type: 'spot', mustGo: true, name: 'Harukas 300', desc: '阿倍野展望台夜景', ticket: { source: 'Klook', url: LINKS.HARUKAS, booked: false } },
+                            { time: '19:00', type: 'food', name: 'Kushikatsu Daruma', desc: '晚餐：新世界炸串 (元祖串炸)' },
+                            { time: '21:00', type: 'shop', mustGo: true, name: 'Don Quijote Dotonbori', desc: '唐吉訶德：24H買爆 (回飯店路上)' }
+                        ]
+                    },
+                    {
+                        date: '12/27 (六)', area: '返程',
+                        spots: [
+                            { time: '09:30', type: 'spot', name: 'Namba Station', desc: '搭乘 Rapi:t 機場特急', ticket: { source: 'Klook', url: LINKS.RAPIT, booked: false } },
+                            { time: '10:30', type: 'shop', name: 'Rinku Premium Outlets', desc: '臨空城 Outlet' },
+                            { time: '14:00', type: 'spot', name: 'Kansai Airport', desc: 'JX823 起飛 (14:00)' },
+                            { time: '16:15', type: 'transport', mustGo: true, name: '機場接送 (回程)', desc: '桃機T1接機 -> 坪頂路52巷16號 ($1000/未匯款!)' }
+                        ]
+                    }
+                ]);
 
-            const getMorningStart = (dayIndex) => {
-                if (dayIndex === 0) return null;
-                if (dayIndex <= 4) return 'VIA INN PRIME KYOTOEKI HACHIJOGUCHI';
-                return 'Sotetsu Fresa Inn Osaka-Namba';
-            };
-            const getHotelName = (dayIndex) => dayIndex <= 4 ? '京都 VIA INN PRIME 八條口' : '大阪 相鐵 Fresa Inn 難波';
+                onMounted(async () => {
+                    const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://tw.rter.info/capi.php'));
+                    const raw = await res.json();
+                    const data = JSON.parse(raw.contents);
+                    if (data.USDTWD && data.USDJPY) {
+                        currentRate.value = (data.USDTWD.Exrate / data.USDJPY.Exrate).toFixed(4);
+                    }
 
-            const getTypeIcon = (t) => ({food:'🍜',shop:'🛍️',spot:'⛩️',cafe:'☕'}[t] || '📍');
+                    // 自動跳到當天
+                    const now = new Date();
+                    const day = now.getDate();
+                    if (now.getMonth() === 11 && day >= 20 && day <= 27) {
+                        activeDayIndex.value = day - 20;
+                        // 自動滾動到該頁籤
+                        setTimeout(() => {
+                            const tab = document.getElementById('day-tab-' + (day - 20));
+                            if (tab) tab.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                        }, 500);
+                    }
+                });
 
-            // 🌟 12/25 & 12/26 重點調整行程 🌟
-            const itinerary = ref([
-                {
-                    date: '12/20 (六)', area: '京都車站', 
-                    spots: [
-                        { time: '12:50', type: 'spot', name: 'Kansai Airport', desc: '入境 / 領取 Haruka', ticket: { source: 'Klook', url: LINKS.HARUKA, booked: true }},
-                        { time: '15:00', type: 'spot', name: 'VIA INN PRIME 京都八條口', desc: 'Check-in 放行李' },
-                        { time: '17:00', type: 'food', mustGo: true, name: 'Sushi no Musashi', desc: '迴轉壽司 (車站內)' },
-                        { time: '19:00', type: 'shop', name: 'Kyoto Station', desc: '大階梯 / 聖誕樹' }
-                    ]
-                },
-                {
-                    date: '12/21 (日)', area: '嵐山/金閣寺', 
-                    spots: [
-                        { time: '09:00', type: 'spot', mustGo: true, name: 'Arashiyama Bamboo Forest', desc: '嵐山竹林 (早起!)' },
-                        { time: '11:00', type: 'food', name: 'Arashiyama Main Street', desc: '午餐：廣川鰻魚或小吃' },
-                        { time: '13:30', type: 'spot', mustGo: true, name: 'Kinkaku-ji', desc: '金閣寺 (搭計程車/巴士)' },
-                        { time: '16:00', type: 'spot', name: 'Kyoto Station', desc: '回市區' }
-                    ]
-                },
-                {
-                    date: '12/22 (一)', area: '海之京都', 
-                    spots: [
-                        { time: '07:40', type: 'spot', mustGo: true, name: 'Kyoto Station Hachijo Exit', desc: '一日遊集合 (確認信箱)', ticket: { source: 'Klook', url: LINKS.AMANOHASHIDATE, booked: false }},
-                        { time: '10:30', type: 'spot', name: 'Amanohashidate', desc: '天橋立飛龍' },
-                        { time: '13:00', type: 'spot', name: 'Ine no Funaya', desc: '伊根舟屋餵海鷗' },
-                        { time: '19:00', type: 'food', name: 'Kyoto Ramen Koji', desc: '拉麵小路' }
-                    ]
-                },
-                {
-                    date: '12/23 (二)', area: '洛東精華', 
-                    spots: [
-                        { time: '09:00', type: 'spot', name: 'Fushimi Inari Taisha', desc: '千本鳥居' },
-                        { time: '10:00', type: 'shop', mustGo: true, name: 'Chiikawa Mogumogu Honpo', desc: '吉伊卡哇伏見店' },
-                        { time: '11:00', type: 'food', mustGo: true, name: 'Kyoto Ito Okashi', desc: '伊藤軒甜點' },
-                        { time: '12:00', type: 'food', mustGo: true, name: 'Nishiki Market', desc: '錦市場吃午餐' },
-                        { time: '14:00', type: 'spot', mustGo: true, name: 'Kiyomizu-dera', desc: '清水寺' },
-                        { time: '15:30', type: 'shop', name: '2/8b pair keyholder', desc: '可愛吊飾' },
-                        { time: '16:30', type: 'cafe', name: 'Blue Bottle Kyoto Kiyamachi', desc: '藍瓶咖啡' }
-                    ]
-                },
-                {
-                    date: '12/24 (三)', area: '大阪移動日', 
-                    spots: [
-                        { time: '10:00', type: 'spot', name: 'Sotetsu Fresa Inn Osaka-Namba', desc: '移動至大阪 Check-in' },
-                        { time: '11:00', type: 'spot', mustGo: true, name: 'Osaka Castle', desc: '大阪城' },
-                        { time: '13:30', type: 'food', mustGo: true, name: 'Ichiran Namba', desc: '一蘭拉麵' },
-                        { time: '15:00', type: 'shop', mustGo: true, name: 'Chiikawa Land Shinsaibashi', desc: 'PARCO 吉伊卡哇' },
-                        { time: '19:00', type: 'food', mustGo: true, name: 'Shabucho', desc: '和牛涮涮鍋' }
-                    ]
-                },
-                // ⚠️ 重點修正：12/25 16:50 燒肉力丸
-                {
-                    date: '12/25 (四)', area: '梅田/聖誕', 
-                    spots: [
-                        { time: '10:00', type: 'shop', mustGo: true, name: 'Standard Products Umeda', desc: '梅田DT塔B2 (還有DAISO)' },
-                        { time: '11:30', type: 'shop', mustGo: true, name: '3COINS +plus LUCUA', desc: '300圓雜貨' },
-                        { time: '12:30', type: 'food', name: 'Gyuta Honjin LINKS UMEDA', desc: '午餐：隨意吃 (不用太飽)' },
-                        { time: '14:00', type: 'shop', mustGo: true, name: 'Kiddyland Osaka Umeda', desc: '吉伊卡哇周邊' },
-                        { time: '15:40', type: 'spot', name: 'Umeda Station', desc: '⚠️ 準備搭地鐵御堂筋線回難波' },
-                        { time: '16:50', type: 'food', mustGo: true, name: 'Yakiniku Rikimaru Dotonbori', desc: '【已預約 ✅】燒肉力丸 16:50 (道頓堀店)', ticket: { source: 'Booking', url: '#', booked: true } },
-                        { time: '19:30', type: 'spot', name: 'Dotonbori Glico Man', desc: '吃飽散步看跑跑人' },
-                        { time: '21:00', type: 'food', name: 'Mugi to Tori', desc: '宵夜：雞白湯拉麵' }
-                    ]
-                },
-                // 12/26 修正：晚餐改新世界
-                {
-                    date: '12/26 (五)', area: '難波/阿倍野', 
-                    spots: [
-                        { time: '10:00', type: 'food', mustGo: true, name: 'CANELE du JAPON', desc: '可麗露' },
-                        { time: '12:30', type: 'food', mustGo: true, name: 'Unagi no Nakasho', desc: '鰻魚飯' },
-                        { time: '14:30', type: 'shop', name: 'Namba Parks', desc: '逛街補貨' },
-                        { time: '16:00', type: 'spot', mustGo: true, name: 'Tsutenkaku', desc: '通天閣 (新世界)' },
-                        { time: '17:00', type: 'spot', mustGo: true, name: 'Harukas 300', desc: '阿倍野展望台夜景', ticket: { source: 'Klook', url: LINKS.HARUKAS, booked: false }},
-                        { time: '19:00', type: 'food', name: 'Kushikatsu Daruma', desc: '晚餐：新世界炸串 (元祖串炸)' },
-                        { time: '21:00', type: 'shop', mustGo: true, name: 'Don Quijote Dotonbori', desc: '唐吉訶德：24H買爆 (回飯店路上)' }
-                    ]
-                },
-                {
-                    date: '12/27 (六)', area: '返程', 
-                    spots: [
-                        { time: '09:30', type: 'spot', name: 'Namba Station', desc: '搭乘 Rapi:t 機場特急', ticket: { source: 'Klook', url: LINKS.RAPIT, booked: false }},
-                        { time: '10:30', type: 'shop', name: 'Rinku Premium Outlets', desc: '臨空城 Outlet' },
-                        { time: '14:00', type: 'spot', name: 'Kansai Airport', desc: 'JX823 起飛' }
-                    ]
-                }
-            ]);
-
-            onMounted(async () => {
-                const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://tw.rter.info/capi.php'));
-                const raw = await res.json();
-                const data = JSON.parse(raw.contents);
-                if(data.USDTWD && data.USDJPY) {
-                    currentRate.value = (data.USDTWD.Exrate / data.USDJPY.Exrate).toFixed(4);
-                }
-                
-                // 自動跳到當天
-                const now = new Date();
-                const day = now.getDate();
-                if (now.getMonth() === 11 && day >= 20 && day <= 27) {
-                    activeDayIndex.value = day - 20;
-                }
-            });
-
-            return { 
-                jpyAmount, twdAmount, currentRate, activeDayIndex,
-                showTranslator, showShoppingList, shoppingList, newItemText, addShoppingItem, handleItemImage, removeImage,
-                theme, setTheme, currentThemeKey,
-                currentCategory, currentPhrases, speakJapanese,
-                itinerary, getMorningStart, getHotelName, getTypeIcon, getPointToPointLink, openMap, getMapLink
-            };
-        }
-    }).mount('#app');
-</script>
+                return {
+                    jpyAmount, twdAmount, currentRate, activeDayIndex,
+                    showTranslator, showShoppingList, shoppingList, newItemText, addShoppingItem, handleItemImage, removeImage,
+                    theme, setTheme, currentThemeKey,
+                    currentCategory, currentPhrases, speakJapanese,
+                    itinerary, getMorningStart, getHotelName, getTypeIcon, getPointToPointLink, openMap, getMapLink
+                };
+            }
+        }).mount('#app');
+    </script>
 
 </body>
+
 </html>

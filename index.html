@@ -344,10 +344,13 @@
     </div>
 
     <script>
-        const { createApp, ref, computed, onMounted } = Vue;
+        const { createApp, ref, computed, onMounted, watch } = Vue;
 
         const AID = '27749';
         const appendAID = (url) => url.includes('aid=') ? url : `${url}${url.includes('?') ? '&' : '?'}aid=${AID}`;
+
+        // Add storage key
+        const STORAGE_KEY = 'osaka_go_shopping_list';
 
         const THEMES = {
             chiikawa: { name: '吉伊', icon: '🐹', slogan: 'WakuWaku', bgGradient: 'bg-gradient-to-br from-pink-50 via-white to-pink-100', textColor: 'text-pink-500', borderColor: 'border-pink-300', btnColor: 'bg-pink-400', lightBg: 'bg-pink-50', lightBorder: 'border-pink-100' },
@@ -380,12 +383,20 @@
                 // 🌟 購物清單 (已加入媽媽的需求) 🌟
                 const showShoppingList = ref(false);
                 const newItemText = ref('');
-                const shoppingList = ref([
+
+                // Load from localStorage or use default
+                const defaultList = [
                     { text: '雅詩蘭黛 年輕無敵膠原霜 (75ml)', checked: false, note: '給媽媽 (Mom)' },
                     { text: '雅詩蘭黛 特潤超導全方位修護露 (50ml)', checked: false, note: '給媽媽 (小棕瓶)' },
                     { text: 'EVE 止痛藥 (藍色)', checked: false, note: '' },
                     { text: '合利他命 EX', checked: false, note: '' }
-                ]);
+                ];
+                const shoppingList = ref(JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultList);
+
+                // Watch for changes and save
+                watch(shoppingList, (newVal) => {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(newVal));
+                }, { deep: true });
 
                 const theme = computed(() => THEMES[currentThemeKey.value]);
                 const setTheme = (key) => currentThemeKey.value = key;

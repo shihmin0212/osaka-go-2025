@@ -386,8 +386,8 @@
 
                 // Load from localStorage or use default
                 const defaultList = [
-                    { text: '雅詩蘭黛 年輕無敵膠原霜 (75ml)', checked: false, note: '給媽媽 (Mom)' },
-                    { text: '雅詩蘭黛 特潤超導全方位修護露 (50ml)', checked: false, note: '給媽媽 (小棕瓶)' },
+                    { text: '雅詩蘭黛 年輕無敵膠原霜 (75ml)', checked: false, note: '給媽媽 (Mom)', image: './assets/estee_cream.png' },
+                    { text: '雅詩蘭黛 特潤超導全方位修護露 (50ml)', checked: false, note: '給媽媽 (小棕瓶)', image: './assets/estee_serum.png' },
                     { text: 'EVE 止痛藥 (藍色)', checked: false, note: '' },
                     { text: '合利他命 EX', checked: false, note: '' }
                 ];
@@ -402,6 +402,35 @@
                 const setTheme = (key) => currentThemeKey.value = key;
                 const currentPhrases = computed(() => JP_DATA[currentCategory.value]);
                 const twdAmount = computed(() => !jpyAmount.value ? 0 : Math.ceil(jpyAmount.value * rate.value));
+
+                // Auto-inject images for existing items if missing (One-time fix for user)
+                onMounted(() => {
+                    shoppingList.value.forEach(item => {
+                        if (item.text.includes('年輕無敵膠原霜') && !item.image) item.image = './assets/estee_cream.png';
+                        if (item.text.includes('特潤超導全方位修護露') && !item.image) item.image = './assets/estee_serum.png';
+                    });
+
+                    // 匯率 API (原有邏輯)
+                    fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://tw.rter.info/capi.php'))
+                        .then(res => res.json())
+                        .then(raw => {
+                            const data = JSON.parse(raw.contents);
+                            if (data.USDTWD && data.USDJPY) {
+                                currentRate.value = (data.USDTWD.Exrate / data.USDJPY.Exrate).toFixed(4);
+                            }
+                        });
+
+                    // 自動跳到當天 (原有邏輯)
+                    const now = new Date();
+                    const day = now.getDate();
+                    if (now.getMonth() === 11 && day >= 20 && day <= 27) {
+                        activeDayIndex.value = day - 20;
+                        setTimeout(() => {
+                            const tab = document.getElementById('day-tab-' + (day - 20));
+                            if (tab) tab.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                        }, 500);
+                    }
+                });
 
                 // Klook Links
                 const LINKS = {
@@ -538,26 +567,7 @@
                     }
                 ]);
 
-                onMounted(async () => {
-                    const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://tw.rter.info/capi.php'));
-                    const raw = await res.json();
-                    const data = JSON.parse(raw.contents);
-                    if (data.USDTWD && data.USDJPY) {
-                        currentRate.value = (data.USDTWD.Exrate / data.USDJPY.Exrate).toFixed(4);
-                    }
 
-                    // 自動跳到當天
-                    const now = new Date();
-                    const day = now.getDate();
-                    if (now.getMonth() === 11 && day >= 20 && day <= 27) {
-                        activeDayIndex.value = day - 20;
-                        // 自動滾動到該頁籤
-                        setTimeout(() => {
-                            const tab = document.getElementById('day-tab-' + (day - 20));
-                            if (tab) tab.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-                        }, 500);
-                    }
-                });
 
                 return {
                     jpyAmount, twdAmount, currentRate, activeDayIndex,

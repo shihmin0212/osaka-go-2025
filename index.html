@@ -408,7 +408,12 @@
                     { text: '雅詩蘭黛 年輕無敵膠原霜 (75ml)', checked: false, note: '給媽媽 (Mom)', image: './assets/estee_cream.png' },
                     { text: '雅詩蘭黛 特潤超導全方位修護露 (50ml)', checked: false, note: '給媽媽 (小棕瓶)', image: './assets/estee_serum.png' },
                     { text: 'EVE 止痛藥 (藍色)', checked: false, note: '' },
-                    { text: '合利他命 EX', checked: false, note: '' }
+                    { text: '合利他命 EX', checked: false, note: '' },
+                    { text: '梳子清潔刷', checked: false, note: '輕鬆清潔梳子上的頭髮', image: './assets/comb_cleaner.png' },
+                    { text: '護髮油', checked: false, note: '味道淡雅質地清爽', image: './assets/hair_oil.png' },
+                    { text: '睡眠香氛噴霧', checked: false, note: '超熱門噴霧香味聞起來很放鬆', image: './assets/sleep_spray.png' },
+                    { text: 'Gyutto 質感整形髮膜', checked: false, note: '這款一定要試試', image: './assets/gyutto_mask.png' },
+                    { text: '皮卡丘滾雪球', checked: false, note: '除了有皮卡丘滾雪球', image: './assets/pikachu_snow.png' }
                 ];
                 const shoppingList = ref(JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultList);
 
@@ -424,9 +429,25 @@
 
                 // Auto-inject images for existing items if missing (One-time fix for user)
                 onMounted(() => {
+                    // Update existing items images
                     shoppingList.value.forEach(item => {
                         if (item.text.includes('年輕無敵膠原霜') && !item.image) item.image = './assets/estee_cream.png';
                         if (item.text.includes('特潤超導全方位修護露') && !item.image) item.image = './assets/estee_serum.png';
+                    });
+
+                    // Auto-add new requested items if not present
+                    const newItems = [
+                        { text: '梳子清潔刷', checked: false, note: '輕鬆清潔梳子上的頭髮', image: './assets/comb_cleaner.png' },
+                        { text: '護髮油', checked: false, note: '味道淡雅質地清爽', image: './assets/hair_oil.png' },
+                        { text: '睡眠香氛噴霧', checked: false, note: '超熱門噴霧香味聞起來很放鬆', image: './assets/sleep_spray.png' },
+                        { text: 'Gyutto 質感整形髮膜', checked: false, note: '這款一定要試試', image: './assets/gyutto_mask.png' },
+                        { text: '皮卡丘滾雪球', checked: false, note: '除了有皮卡丘滾雪球', image: './assets/pikachu_snow.png' }
+                    ];
+
+                    newItems.forEach(newItem => {
+                        if (!shoppingList.value.some(i => i.text === newItem.text)) {
+                            shoppingList.value.push(newItem);
+                        }
                     });
 
                     // 匯率 API (原有邏輯)

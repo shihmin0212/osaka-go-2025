@@ -281,25 +281,44 @@
                         <div v-for="(item, idx) in shoppingList" :key="idx"
                             class="flex items-start gap-3 p-3 rounded-xl border transition-all"
                             :class="item.checked ? 'bg-gray-100 border-gray-200 opacity-60' : 'bg-white border-gray-200 shadow-sm'">
-                            <input type="checkbox" v-model="item.checked" class="mt-1 w-5 h-5 accent-pink-500">
-                            <div class="flex-1">
-                                <div class="font-bold text-gray-800" :class="{'line-through': item.checked}">{{
-                                    item.text }}</div>
-                                <div class="text-xs text-gray-400 mt-0.5" v-if="item.note">{{ item.note }}</div>
-                                <div v-if="item.image" class="mt-2 relative group">
+                            <input type="checkbox" v-model="item.checked"
+                                class="mt-1 w-5 h-5 accent-pink-500 flex-shrink-0">
+
+                            <div class="flex-1 min-w-0">
+                                <div v-if="!item.isEditing">
+                                    <div class="font-bold text-gray-800 break-words"
+                                        :class="{'line-through': item.checked}">{{ item.text }}</div>
+                                    <div class="text-xs text-gray-400 mt-0.5 break-words"
+                                        v-if="item.note || item.text.includes('雅詩蘭黛')">{{ item.note }}</div>
+                                </div>
+                                <div v-else class="space-y-2">
+                                    <input type="text" v-model="item.text"
+                                        class="w-full text-sm font-bold border rounded p-1" placeholder="商品名稱">
+                                    <input type="text" v-model="item.note" class="w-full text-xs border rounded p-1"
+                                        placeholder="備註 (選填)">
+                                </div>
+
+                                <div v-if="item.image" class="mt-2 relative group w-fit">
                                     <img :src="item.image" class="w-20 h-20 object-cover rounded-lg border">
                                     <button @click="removeImage(idx)"
                                         class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md">×</button>
                                 </div>
-                                <label v-else
+                                <label v-else-if="!item.isEditing"
                                     class="mt-1 inline-flex items-center gap-1 text-xs text-blue-500 cursor-pointer">
                                     📷 截圖/拍照
                                     <input type="file" accept="image/*" class="hidden"
                                         @change="(e) => handleItemImage(e, idx)">
                                 </label>
                             </div>
-                            <button @click="shoppingList.splice(idx, 1)"
-                                class="text-gray-300 hover:text-red-500">×</button>
+
+                            <div class="flex flex-col gap-1">
+                                <button @click="item.isEditing = !item.isEditing"
+                                    class="text-gray-400 hover:text-blue-500 p-1">
+                                    {{ item.isEditing ? '💾' : '✏️' }}
+                                </button>
+                                <button @click="shoppingList.splice(idx, 1)"
+                                    class="text-gray-300 hover:text-red-500 p-1">×</button>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -457,7 +457,8 @@
                     AMANOHASHIDATE: appendAID('https://www.klook.com/zh-TW/activity/25686-amanohashidate-ine-boathouse-miyama-kayabuki-no-sato-day-tour-osaka/'),
                     UMEDA_SKY: appendAID('https://www.klook.com/zh-TW/activity/1301-umeda-sky-building-osaka/'),
                     RAPIT: appendAID('https://www.klook.com/zh-TW/activity/599-kansai-airport-nankai-line-osaka/'),
-                    HARUKAS: appendAID('https://www.klook.com/zh-TW/activity/2424-harukas-300-observatory-ticket-osaka/')
+                    HARUKAS: appendAID('https://www.klook.com/zh-TW/activity/2424-harukas-300-observatory-ticket-osaka/'),
+                    ESIM: appendAID('https://www.klook.com/zh-TW/activity/109393-japan-esim-high-speed-internet-qr-code-voucher/')
                 };
 
                 const addShoppingItem = () => {
@@ -496,7 +497,7 @@
                 };
                 const getHotelName = (dayIndex) => dayIndex <= 4 ? '京都 VIA INN PRIME 八條口' : '大阪 相鐵 Fresa Inn 難波';
 
-                const getTypeIcon = (t) => ({ food: '🍜', shop: '🛍️', spot: '⛩️', cafe: '☕', transport: '🚐' }[t] || '📍');
+                const getTypeIcon = (t) => ({ food: '🍜', shop: '🛍️', spot: '⛩️', cafe: '☕', transport: '🚐', net: '📶' }[t] || '📍');
 
                 // 🌟 行程資料 (含接送與訂位) 🌟
                 const itinerary = ref([
@@ -504,6 +505,7 @@
                         date: '12/20 (六)', area: '京都車站',
                         spots: [
                             { time: '06:15', type: 'transport', name: '機場接送 (出發)', desc: '坪頂路52巷16號 上車 -> 桃園機場T1 ($1000/已匯)', mustGo: true },
+                            { time: '12:00', type: 'net', name: '啟用 eSIM 網路', desc: '每日 2GB / 8天 (抵達即用/點擊開啟憑證)', ticket: { source: 'Klook 憑證', url: LINKS.ESIM, booked: true } },
                             { time: '12:50', type: 'transport', name: '關西機場 ➜ 京都車站 (Haruka)', desc: '入境後馬上出發！(點擊開啟憑證)', ticket: { source: 'Klook 憑證', url: LINKS.HARUKA, booked: true } },
                             { time: '15:00', type: 'spot', name: 'VIA INN PRIME 京都八條口', desc: 'Check-in 放行李' },
                             { time: '17:00', type: 'food', mustGo: true, name: 'Sushi no Musashi', desc: '迴轉壽司 (車站內)' },

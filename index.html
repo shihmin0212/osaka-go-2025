@@ -299,7 +299,9 @@
                                 </div>
 
                                 <div v-if="item.image" class="mt-2 relative group w-fit">
-                                    <img :src="item.image" class="w-20 h-20 object-cover rounded-lg border">
+                                    <img :src="item.image"
+                                        class="w-20 h-20 object-cover rounded-lg border cursor-zoom-in hover:opacity-90 transition"
+                                        @click="previewImage = item.image">
                                     <button @click="removeImage(idx)"
                                         class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md">×</button>
                                 </div>
@@ -360,6 +362,16 @@
             </div>
         </transition>
 
+        <transition name="modal">
+            <div v-if="previewImage" class="fixed inset-0 z-[150] flex items-center justify-center bg-black/90 p-4"
+                @click="previewImage = null">
+                <img :src="previewImage"
+                    class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl scale-100 transition-transform">
+                <button
+                    class="absolute top-4 right-4 text-white text-4xl font-bold opacity-80 hover:opacity-100">×</button>
+            </div>
+        </transition>
+
     </div>
 
     <script>
@@ -397,6 +409,7 @@
                 const rate = ref(0.22);
                 const currentRate = ref('0.2200');
                 const showTranslator = ref(false);
+                const previewImage = ref(null);
                 const currentCategory = ref('用餐');
 
                 // 🌟 購物清單 (已加入媽媽的需求) 🌟
@@ -614,6 +627,7 @@
                 return {
                     jpyAmount, twdAmount, currentRate, activeDayIndex,
                     showTranslator, showShoppingList, shoppingList, newItemText, addShoppingItem, handleItemImage, removeImage,
+                    previewImage,
                     theme, setTheme, currentThemeKey,
                     currentCategory, currentPhrases, speakJapanese,
                     itinerary, getMorningStart, getHotelName, getTypeIcon, getPointToPointLink, openMap, getMapLink

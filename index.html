@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Osaka Go! 2025</title>
+    <link rel="icon" type="image/png" href="./assets/favicon.png">
+    <link rel="apple-touch-icon" href="./assets/favicon.png">
+    <link rel="manifest" href="./manifest.json">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap"
@@ -65,6 +68,11 @@
             color: #ec4899;
             box-shadow: 0 2px 10px rgba(236, 72, 153, 0.2);
             transform: scale(1.05);
+        }
+
+        .mask-gradient-right {
+            mask-image: linear-gradient(to right, black 85%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
         }
     </style>
 </head>
@@ -270,30 +278,87 @@
                         <button @click="showShoppingList = false" class="text-2xl font-bold text-gray-400">×</button>
                     </div>
 
-                    <div class="p-3 bg-gray-50 border-b flex gap-2">
-                        <input type="text" v-model="newItemText" placeholder="輸入商品..."
-                            class="flex-1 p-2 rounded-lg border text-sm" @keyup.enter="addShoppingItem">
-                        <button @click="addShoppingItem" class="px-4 py-2 rounded-lg text-white font-bold text-sm"
-                            :class="theme.btnColor">＋</button>
+                    <!-- Tools Bar: Search & JSON -->
+                    <div class="px-4 pt-3 pb-2 flex gap-2">
+                        <div class="relative flex-1">
+                            <span class="absolute left-2 top-1.5 text-gray-400 text-xs">🔍</span>
+                            <input type="text" v-model="searchQuery" placeholder="搜尋商品..."
+                                class="w-full pl-7 pr-2 py-1.5 rounded-lg border bg-gray-50 text-sm focus:bg-white transition-colors">
+                        </div>
+                        <button @click="showJsonModal = true"
+                            class="px-2 py-1.5 rounded-lg border bg-gray-50 text-xs font-bold text-gray-500 hover:bg-gray-100 hover:text-blue-500 transition">
+                            💾 共編/備份
+                        </button>
                     </div>
 
-                    <div class="flex-1 overflow-y-auto p-4 space-y-3">
-                        <div v-for="(item, idx) in shoppingList" :key="idx"
-                            class="flex items-start gap-3 p-3 rounded-xl border transition-all"
+                    <!-- Category Filter -->
+                    <div class="px-4 pb-2 flex gap-2 overflow-x-auto no-scrollbar mask-gradient-right">
+                        <button @click="filterCategory = 'All'"
+                            class="flex-shrink-0 px-3 py-1 rounded-full text-xs font-bold border transition-all"
+                            :class="filterCategory === 'All' ? theme.btnColor + ' text-white border-transparent' : 'bg-white text-gray-500 border-gray-200'">
+                            全部
+                        </button>
+                        <button v-for="cat in storeCategories" :key="cat" @click="filterCategory = cat"
+                            class="flex-shrink-0 px-3 py-1 rounded-full text-xs font-bold border transition-all"
+                            :class="filterCategory === cat ? theme.btnColor + ' text-white border-transparent' : 'bg-white text-gray-500 border-gray-200'">
+                            {{ cat }}
+                        </button>
+                        <button @click="showCategoryManager = true"
+                            class="flex-shrink-0 px-2 py-1 rounded-full text-xs border border-dashed border-gray-300 text-gray-400 hover:text-blue-500 hover:border-blue-300 transition">
+                            ＋分類
+                        </button>
+                    </div>
+
+                    <!-- Add Item Input -->
+                    <div class="p-3 bg-gray-50 border-b border-t">
+                        <div class="flex gap-2 mb-2">
+                            <select v-model="newItemCategory"
+                                class="text-xs p-1.5 rounded-lg border text-gray-600 bg-white focus:outline-none">
+                                <option v-for="cat in storeCategories" :key="cat" :value="cat">{{ cat }}</option>
+                            </select>
+                            <input type="text" v-model="newItemText" placeholder="輸入商品..."
+                                class="flex-1 p-2 rounded-lg border text-sm focus:ring-2 focus:ring-opacity-50 transition"
+                                :class="'focus:ring-' + theme.textColor.split('-')[1] + '-300'"
+                                @keyup.enter="addShoppingItem">
+                        </div>
+                        <button @click="addShoppingItem"
+                            class="w-full py-2 rounded-lg text-white font-bold text-sm shadow-sm active:scale-95 transition-transform"
+                            :class="theme.btnColor">
+                            ＋ 加入清單
+                        </button>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
+                        <div v-if="paginatedShoppingList.length === 0" class="text-center py-10 text-gray-400 text-sm">
+                            沒有符合的商品 🍂
+                        </div>
+                        <div v-for="(item, idx) in paginatedShoppingList" :key="item.id"
+                            class="flex items-start gap-3 p-3 rounded-xl border transition-all group"
                             :class="item.checked ? 'bg-gray-100 border-gray-200 opacity-60' : 'bg-white border-gray-200 shadow-sm'">
                             <input type="checkbox" v-model="item.checked"
                                 class="mt-1 w-5 h-5 accent-pink-500 flex-shrink-0">
 
                             <div class="flex-1 min-w-0">
                                 <div v-if="!item.isEditing">
-                                    <div class="font-bold text-gray-800 break-words"
-                                        :class="{'line-through': item.checked}">{{ item.text }}</div>
-                                    <div class="text-xs text-gray-400 mt-0.5 break-words"
+                                    <div class="flex items-center gap-2 flex-wrap mb-0.5">
+                                        <span
+                                            class="text-[10px] px-1.5 py-0.5 rounded text-gray-500 bg-gray-100 border">
+                                            {{ item.category || '未分類' }}
+                                        </span>
+                                        <div class="font-bold text-gray-800 break-words flex-1"
+                                            :class="{'line-through text-gray-400': item.checked}">{{ item.text }}</div>
+                                    </div>
+                                    <div class="text-xs text-gray-400 mt-0.5 break-words pl-1"
                                         v-if="item.note || item.text.includes('雅詩蘭黛')">{{ item.note }}</div>
                                 </div>
                                 <div v-else class="space-y-2">
-                                    <input type="text" v-model="item.text"
-                                        class="w-full text-sm font-bold border rounded p-1" placeholder="商品名稱">
+                                    <div class="flex gap-2">
+                                        <select v-model="item.category" class="text-xs p-1 border rounded bg-gray-50">
+                                            <option v-for="cat in storeCategories" :value="cat">{{ cat }}</option>
+                                        </select>
+                                        <input type="text" v-model="item.text"
+                                            class="flex-1 text-sm font-bold border rounded p-1" placeholder="商品名稱">
+                                    </div>
                                     <input type="text" v-model="item.note" class="w-full text-xs border rounded p-1"
                                         placeholder="備註 (選填)">
                                 </div>
@@ -302,26 +367,40 @@
                                     <img :src="item.image"
                                         class="w-20 h-20 object-cover rounded-lg border cursor-zoom-in hover:opacity-90 transition"
                                         @click="previewImage = item.image">
-                                    <button @click="removeImage(idx)"
+                                    <button @click="removeImageSmart(item)"
                                         class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md">×</button>
                                 </div>
                                 <label v-else-if="!item.isEditing"
                                     class="mt-1 inline-flex items-center gap-1 text-xs text-blue-500 cursor-pointer">
                                     📷 截圖/拍照
                                     <input type="file" accept="image/*" class="hidden"
-                                        @change="(e) => handleItemImage(e, idx)">
+                                        @change="(e) => handleItemImageSmart(e, item)">
                                 </label>
                             </div>
 
                             <div class="flex flex-col gap-1">
                                 <button @click="item.isEditing = !item.isEditing"
-                                    class="text-gray-400 hover:text-blue-500 p-1">
+                                    class="text-gray-400 hover:text-blue-500 p-1 transition-colors">
                                     {{ item.isEditing ? '💾' : '✏️' }}
                                 </button>
-                                <button @click="shoppingList.splice(idx, 1)"
-                                    class="text-gray-300 hover:text-red-500 p-1">×</button>
+                                <button @click="deleteItem(item)"
+                                    class="text-gray-300 hover:text-red-500 p-1 transition-colors">×</button>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div v-if="totalPages > 1"
+                        class="p-3 border-t bg-gray-50 flex justify-between items-center text-sm">
+                        <button @click="currentPage--" :disabled="currentPage === 1"
+                            class="px-3 py-1 rounded-lg border bg-white disabled:opacity-50 hover:bg-gray-100 transition">
+                            ◀
+                        </button>
+                        <span class="font-bold text-gray-500">Page {{ currentPage }} / {{ totalPages }}</span>
+                        <button @click="currentPage++" :disabled="currentPage === totalPages"
+                            class="px-3 py-1 rounded-lg border bg-white disabled:opacity-50 hover:bg-gray-100 transition">
+                            ▶
+                        </button>
                     </div>
                 </div>
             </div>
@@ -362,15 +441,76 @@
             </div>
         </transition>
 
-        <transition name="modal">
-            <div v-if="previewImage" class="fixed inset-0 z-[150] flex items-center justify-center bg-black/90 p-4"
-                @click="previewImage = null">
-                <img :src="previewImage"
-                    class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl scale-100 transition-transform">
-                <button
-                    class="absolute top-4 right-4 text-white text-4xl font-bold opacity-80 hover:opacity-100">×</button>
+    </div>
+    </transition>
+
+    <!-- Category Manager Modal -->
+    <transition name="modal">
+        <div v-if="showCategoryManager" class="fixed inset-0 z-[110] flex items-center justify-center px-4"
+            style="background: rgba(0,0,0,0.3); backdrop-filter: blur(2px);">
+            <div class="absolute inset-0" @click="showCategoryManager = false"></div>
+            <div class="modal-content w-full max-w-xs bg-white rounded-2xl shadow-xl overflow-hidden p-4">
+                <h3 class="font-bold text-lg mb-4 text-center">🏷️ 管理商分類</h3>
+                <div class="space-y-2 mb-4 max-h-[200px] overflow-y-auto">
+                    <div v-for="(cat, idx) in storeCategories" :key="cat"
+                        class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                        <span>{{ cat }}</span>
+                        <button v-if="idx > 3" @click="removeCategory(idx)"
+                            class="text-red-400 hover:text-red-600 font-bold">×</button>
+                        <span v-else class="text-xs text-gray-300">預設</span>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <input v-model="newCategoryText" placeholder="新分類名稱" class="flex-1 border rounded px-2 text-sm"
+                        @keyup.enter="addCategory">
+                    <button @click="addCategory"
+                        class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm font-bold">新增</button>
+                </div>
             </div>
-        </transition>
+        </div>
+    </transition>
+
+    <!-- JSON Sync Modal -->
+    <transition name="modal">
+        <div v-if="showJsonModal" class="fixed inset-0 z-[120] flex items-center justify-center px-4"
+            style="background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);">
+            <div class="absolute inset-0" @click="showJsonModal = false"></div>
+            <div
+                class="modal-content w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[85vh]">
+                <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-lg">💾 資料共編/備份</h3>
+                        <p class="text-xs text-gray-500">複製 JSON 給朋友，或貼上朋友的 JSON 來覆蓋</p>
+                    </div>
+                    <button @click="showJsonModal = false" class="text-2xl text-gray-400 hover:text-gray-600">×</button>
+                </div>
+                <div class="p-4 flex-1 flex flex-col min-h-0">
+                    <textarea v-model="jsonContent"
+                        class="w-full h-full p-3 text-xs font-mono bg-gray-800 text-green-400 rounded-xl resize-none border-0 focus:ring-2 focus:ring-blue-400"
+                        placeholder="在此貼上 JSON..."></textarea>
+                </div>
+                <div class="p-4 border-t bg-gray-50 flex gap-3">
+                    <button @click="copyJson"
+                        class="flex-1 py-3 bg-white border border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition shadow-sm">
+                        📋 複製全部
+                    </button>
+                    <button @click="importJson"
+                        class="flex-1 py-3 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-600 transition shadow hover:shadow-lg hover:-translate-y-0.5">
+                        📥 匯入覆蓋
+                    </button>
+                </div>
+            </div>
+        </div>
+    </transition>
+
+    <transition name="modal">
+        <div v-if="previewImage" class="fixed inset-0 z-[150] flex items-center justify-center bg-black/90 p-4"
+            @click="previewImage = null">
+            <img :src="previewImage"
+                class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl scale-100 transition-transform">
+            <button class="absolute top-4 right-4 text-white text-4xl font-bold opacity-80 hover:opacity-100">×</button>
+        </div>
+    </transition>
 
     </div>
 
@@ -382,6 +522,7 @@
 
         // Add storage key
         const STORAGE_KEY = 'osaka_go_shopping_list';
+        const CATEGORY_KEY = 'osaka_go_categories';
 
         const THEMES = {
             chiikawa: { name: '吉伊', icon: '🐹', slogan: 'WakuWaku', bgGradient: 'bg-gradient-to-br from-pink-50 via-white to-pink-100', textColor: 'text-pink-500', borderColor: 'border-pink-300', btnColor: 'bg-pink-400', lightBg: 'bg-pink-50', lightBorder: 'border-pink-100' },
@@ -414,26 +555,93 @@
 
                 // 🌟 購物清單 (已加入媽媽的需求) 🌟
                 const showShoppingList = ref(false);
+                const showJsonModal = ref(false);
+                const showCategoryManager = ref(false);
                 const newItemText = ref('');
+                const newItemCategory = ref('藥妝'); // Default category
+                const searchQuery = ref('');
+                const filterCategory = ref('All');
+                const currentPage = ref(1);
+                const itemsPerPage = 5;
+                const jsonContent = ref('');
+                const newCategoryText = ref('');
+
+                // Default Categories
+                const defaultCategories = ['藥妝', '電器', '零食', '服飾', '其他'];
+                const storeCategories = ref(JSON.parse(localStorage.getItem(CATEGORY_KEY)) || defaultCategories);
 
                 // Load from localStorage or use default
                 const defaultList = [
-                    { text: '雅詩蘭黛 年輕無敵膠原霜 (75ml)', checked: false, note: '給媽媽 (Mom)', image: './assets/estee_cream.png' },
-                    { text: '雅詩蘭黛 特潤超導全方位修護露 (50ml)', checked: false, note: '給媽媽 (小棕瓶)', image: './assets/estee_serum.png' },
-                    { text: 'EVE 止痛藥 (藍色)', checked: false, note: '' },
-                    { text: '合利他命 EX', checked: false, note: '' },
-                    { text: '梳子清潔刷', checked: false, note: '輕鬆清潔梳子上的頭髮', image: './assets/comb_cleaner.png' },
-                    { text: '護髮油', checked: false, note: '味道淡雅質地清爽', image: './assets/hair_oil.png' },
-                    { text: '睡眠香氛噴霧', checked: false, note: '超熱門噴霧香味聞起來很放鬆', image: './assets/sleep_spray.png' },
-                    { text: 'Gyutto 質感整形髮膜', checked: false, note: '這款一定要試試', image: './assets/gyutto_mask.png' },
-                    { text: '皮卡丘滾雪球', checked: false, note: '除了有皮卡丘滾雪球', image: './assets/pikachu_snow.png' }
+                    { id: 1, text: '雅詩蘭黛 年輕無敵膠原霜 (75ml)', category: '藥妝', checked: false, note: '給媽媽 (Mom)', image: './assets/estee_cream.png' },
+                    { id: 2, text: '雅詩蘭黛 特潤超導全方位修護露 (50ml)', category: '藥妝', checked: false, note: '給媽媽 (小棕瓶)', image: './assets/estee_serum.png' },
+                    { id: 3, text: 'EVE 止痛藥 (藍色)', category: '藥妝', checked: false, note: '' },
+                    { id: 4, text: '合利他命 EX', category: '藥妝', checked: false, note: '' },
+                    { id: 5, text: '梳子清潔刷', category: '其他', checked: false, note: '輕鬆清潔梳子上的頭髮', image: './assets/comb_cleaner.png' },
+                    { id: 6, text: '護髮油', category: '藥妝', checked: false, note: '味道淡雅質地清爽', image: './assets/hair_oil.png' },
+                    { id: 7, text: '睡眠香氛噴霧', category: '藥妝', checked: false, note: '超熱門噴霧香味聞起來很放鬆', image: './assets/sleep_spray.png' },
+                    { id: 8, text: 'Gyutto 質感整形髮膜', category: '藥妝', checked: false, note: '這款一定要試試', image: './assets/gyutto_mask.png' },
+                    { id: 9, text: '皮卡丘滾雪球', category: '零食', checked: false, note: '除了有皮卡丘滾雪球', image: './assets/pikachu_snow.png' },
+                    { id: 10, text: 'excel蜜粉', category: '藥妝', checked: false, note: '粉質無敵細緻', image: './assets/excel_powder.png' },
+                    { id: 11, text: '京都塔 吉伊卡娃紀念幣', category: '其他', checked: false, note: '京都塔限定', image: './assets/chiikawa_coin.png' },
+                    { id: 12, text: '按壓原子筆', category: '文具', checked: false, note: '每次按都會換表情', image: './assets/click_pen.png' },
+                    { id: 13, text: '3coin行李收納袋', category: '其他', checked: false, note: '旅行必備', image: './assets/luggage_bag.png' },
+                    { id: 14, text: '壓縮袋 壓縮機', category: '電器', checked: false, note: '節省空間神器', image: './assets/compression_bag.png' }
                 ];
-                const shoppingList = ref(JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultList);
+
+                // Migrate old list structure if necessary (add missing IDs or categories)
+                let savedList = JSON.parse(localStorage.getItem(STORAGE_KEY));
+                if (savedList) {
+                    savedList = savedList.map((item, index) => ({
+                        ...item,
+                        id: item.id || Date.now() + index,
+                        category: item.category || '未分類'
+                    }));
+                }
+
+                const shoppingList = ref(savedList || defaultList);
 
                 // Watch for changes and save
                 watch(shoppingList, (newVal) => {
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(newVal));
+                    // Update JSON content if modal is open to keep in sync
+                    if (showJsonModal.value) {
+                        jsonContent.value = JSON.stringify(newVal, null, 2);
+                    }
                 }, { deep: true });
+
+                watch(storeCategories, (newVal) => {
+                    localStorage.setItem(CATEGORY_KEY, JSON.stringify(newVal));
+                }, { deep: true });
+
+                // Update JSON content when modal opens
+                watch(showJsonModal, (isOpen) => {
+                    if (isOpen) {
+                        jsonContent.value = JSON.stringify(shoppingList.value, null, 2);
+                    }
+                });
+
+                // Computed Properties for Filtering & Pagination
+                const filteredShoppingList = computed(() => {
+                    return shoppingList.value.filter(item => {
+                        const matchesSearch = item.text.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+                            (item.note && item.note.toLowerCase().includes(searchQuery.value.toLowerCase()));
+                        const matchesCategory = filterCategory.value === 'All' || item.category === filterCategory.value;
+                        return matchesSearch && matchesCategory;
+                    });
+                });
+
+                const totalPages = computed(() => Math.ceil(filteredShoppingList.value.length / itemsPerPage));
+
+                const paginatedShoppingList = computed(() => {
+                    const start = (currentPage.value - 1) * itemsPerPage;
+                    const end = start + itemsPerPage;
+                    return filteredShoppingList.value.slice(start, end);
+                });
+
+                // Reset page when filter changes
+                watch([searchQuery, filterCategory], () => {
+                    currentPage.value = 1;
+                });
 
                 const theme = computed(() => THEMES[currentThemeKey.value]);
                 const setTheme = (key) => currentThemeKey.value = key;
@@ -454,7 +662,12 @@
                         { text: '護髮油', checked: false, note: '味道淡雅質地清爽', image: './assets/hair_oil.png' },
                         { text: '睡眠香氛噴霧', checked: false, note: '超熱門噴霧香味聞起來很放鬆', image: './assets/sleep_spray.png' },
                         { text: 'Gyutto 質感整形髮膜', checked: false, note: '這款一定要試試', image: './assets/gyutto_mask.png' },
-                        { text: '皮卡丘滾雪球', checked: false, note: '除了有皮卡丘滾雪球', image: './assets/pikachu_snow.png' }
+                        { text: '皮卡丘滾雪球', checked: false, note: '除了有皮卡丘滾雪球', image: './assets/pikachu_snow.png' },
+                        { text: 'excel蜜粉', checked: false, note: '粉質無敵細緻', image: './assets/excel_powder.png' },
+                        { text: '京都塔 吉伊卡娃紀念幣', checked: false, note: '京都塔限定', image: './assets/chiikawa_coin.png' },
+                        { text: '按壓原子筆', checked: false, note: '每次按都會換表情', image: './assets/click_pen.png' },
+                        { text: '3coin行李收納袋', checked: false, note: '旅行必備', image: './assets/luggage_bag.png' },
+                        { text: '壓縮袋 壓縮機', checked: false, note: '節省空間神器', image: './assets/compression_bag.png' }
                     ];
 
                     newItems.forEach(newItem => {
@@ -497,20 +710,94 @@
 
                 const addShoppingItem = () => {
                     if (newItemText.value.trim()) {
-                        shoppingList.value.push({ text: newItemText.value, checked: false, image: null, note: '' });
+                        shoppingList.value.unshift({ // Add to top
+                            id: Date.now(),
+                            text: newItemText.value,
+                            category: newItemCategory.value,
+                            checked: false,
+                            image: null,
+                            note: ''
+                        });
                         newItemText.value = '';
                     }
                 };
 
+                const deleteItem = (itemToDelete) => {
+                    shoppingList.value = shoppingList.value.filter(item => item.id !== itemToDelete.id);
+                };
+
+                // JSON Functions
+                const copyJson = () => {
+                    navigator.clipboard.writeText(jsonContent.value).then(() => {
+                        alert('已複製到剪貼簿！請將代碼傳送給您的旅伴。');
+                    });
+                };
+
+                const importJson = () => {
+                    try {
+                        const parsed = JSON.parse(jsonContent.value);
+                        if (Array.isArray(parsed)) {
+                            if (confirm('確定要匯入並覆蓋目前的清單嗎？此動作無法復原。')) {
+                                // Ensure all imported items have IDs
+                                shoppingList.value = parsed.map((item, idx) => ({
+                                    ...item,
+                                    id: item.id || Date.now() + idx
+                                }));
+                                showJsonModal.value = false;
+                                alert('匯入成功！');
+                            }
+                        } else {
+                            alert('格式錯誤：JSON 必須是陣列格式');
+                        }
+                    } catch (e) {
+                        alert('無效的 JSON 格式：' + e.message);
+                    }
+                };
+
+                // Category Functions
+                const addCategory = () => {
+                    const val = newCategoryText.value.trim();
+                    if (val && !storeCategories.value.includes(val)) {
+                        storeCategories.value.push(val);
+                        newCategoryText.value = '';
+                    }
+                };
+                const removeCategory = (idx) => {
+                    if (confirm('確定刪除此分類？')) {
+                        storeCategories.value.splice(idx, 1);
+                    }
+                };
+
                 const handleItemImage = (e, idx) => {
+                    // Note: idx in pagination is relative. We need to find real item in shoppingList.
+                    // But here logic is simpler if we just update the specific item passed by template
+                    // Vue reactivity works on the object reference itself.
+                    // The original code passed 'idx' which was index in loop. 
+                    // To be safe with pagination, we should use the item object directly, but let's see how template called it.
+                    // Template was: @change="(e) => handleItemImage(e, idx)"
+                    // We changed template to iterate paginated list. 
+                    // Wait, the template change passed `item` and `idx` from paginatedList. 
+                    // So `idx` depends on page.
+                    // Let's refactor handleItemImage to take the Item Object instead of Index.
+                };
+
+                // Refactored Image Handler
+                const handleItemImageSmart = (e, item) => {
                     const file = e.target.files[0];
                     if (file) {
                         const reader = new FileReader();
-                        reader.onload = (e) => shoppingList.value[idx].image = e.target.result;
+                        reader.onload = (e) => item.image = e.target.result;
                         reader.readAsDataURL(file);
                     }
                 };
-                const removeImage = (idx) => shoppingList.value[idx].image = null;
+
+                const removeImageSmart = (item) => item.image = null; // Replaces removeImage(idx)
+
+                // Legacy functions replacement kept valid for correctness if needed, but we use Smart versions in template
+                const removeImage = (idx) => { };
+
+                // Redefine for script
+                const handleItemImageLegacy = (e, idx) => { /* ... */ };
 
                 const speakJapanese = (text) => {
                     if ('speechSynthesis' in window) {
@@ -626,7 +913,11 @@
 
                 return {
                     jpyAmount, twdAmount, currentRate, activeDayIndex,
-                    showTranslator, showShoppingList, shoppingList, newItemText, addShoppingItem, handleItemImage, removeImage,
+                    showTranslator, showShoppingList, shoppingList, newItemText, addShoppingItem,
+                    newItemCategory, storeCategories, searchQuery, filterCategory, paginatedShoppingList, totalPages, currentPage,
+                    showJsonModal, jsonContent, copyJson, importJson,
+                    showCategoryManager, newCategoryText, addCategory, removeCategory,
+                    handleItemImage: handleItemImageSmart, removeImage: removeImageSmart, handleItemImageSmart, removeImageSmart, deleteItem,
                     previewImage,
                     theme, setTheme, currentThemeKey,
                     currentCategory, currentPhrases, speakJapanese,

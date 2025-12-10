@@ -278,17 +278,13 @@
                         <button @click="showShoppingList = false" class="text-2xl font-bold text-gray-400">×</button>
                     </div>
 
-                    <!-- Tools Bar: Search & JSON -->
+                    <!-- Tools Bar: Search -->
                     <div class="px-4 pt-3 pb-2 flex gap-2">
                         <div class="relative flex-1">
                             <span class="absolute left-2 top-1.5 text-gray-400 text-xs">🔍</span>
                             <input type="text" v-model="searchQuery" placeholder="搜尋商品..."
                                 class="w-full pl-7 pr-2 py-1.5 rounded-lg border bg-gray-50 text-sm focus:bg-white transition-colors">
                         </div>
-                        <button @click="showJsonModal = true"
-                            class="px-2 py-1.5 rounded-lg border bg-gray-50 text-xs font-bold text-gray-500 hover:bg-gray-100 hover:text-blue-500 transition">
-                            💾 共編/備份
-                        </button>
                     </div>
 
                     <!-- Category Filter -->
@@ -310,21 +306,22 @@
                     </div>
 
                     <!-- Add Item Input -->
-                    <div class="p-3 bg-gray-50 border-b border-t">
+                    <div class="p-3 bg-gray-50 border-b border-t transition-colors"
+                        :class="showInputError ? 'bg-red-50' : 'bg-gray-50'">
                         <div class="flex gap-2 mb-2">
                             <select v-model="newItemCategory"
-                                class="text-xs p-1.5 rounded-lg border text-gray-600 bg-white focus:outline-none">
+                                class="text-xs p-1.5 rounded-lg border text-gray-600 bg-white focus:outline-none max-w-[80px]">
                                 <option v-for="cat in storeCategories" :key="cat" :value="cat">{{ cat }}</option>
                             </select>
                             <input type="text" v-model="newItemText" placeholder="輸入商品..."
-                                class="flex-1 p-2 rounded-lg border text-sm focus:ring-2 focus:ring-opacity-50 transition"
-                                :class="'focus:ring-' + theme.textColor.split('-')[1] + '-300'"
+                                class="flex-1 p-2 rounded-lg border text-sm transition-all"
+                                :class="showInputError ? 'border-red-400 ring-2 ring-red-200 placeholder-red-300' : 'focus:ring-2 focus:ring-opacity-50 focus:ring-' + theme.textColor.split('-')[1] + '-300'"
                                 @keyup.enter="addShoppingItem">
                         </div>
                         <button @click="addShoppingItem"
                             class="w-full py-2 rounded-lg text-white font-bold text-sm shadow-sm active:scale-95 transition-transform"
                             :class="theme.btnColor">
-                            ＋ 加入清單
+                            {{ showInputError ? '⚠️ 請輸入商品名稱' : '＋ 加入清單' }}
                         </button>
                     </div>
 
@@ -467,40 +464,6 @@
             </div>
         </transition>
 
-        <!-- JSON Sync Modal -->
-        <transition name="modal">
-            <div v-if="showJsonModal" class="fixed inset-0 z-[120] flex items-center justify-center px-4"
-                style="background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);">
-                <div class="absolute inset-0" @click="showJsonModal = false"></div>
-                <div
-                    class="modal-content w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[85vh]">
-                    <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
-                        <div>
-                            <h3 class="font-bold text-lg">💾 資料共編/備份</h3>
-                            <p class="text-xs text-gray-500">複製 JSON 給朋友，或貼上朋友的 JSON 來覆蓋</p>
-                        </div>
-                        <button @click="showJsonModal = false"
-                            class="text-2xl text-gray-400 hover:text-gray-600">×</button>
-                    </div>
-                    <div class="p-4 flex-1 flex flex-col min-h-0">
-                        <textarea v-model="jsonContent"
-                            class="w-full h-full p-3 text-xs font-mono bg-gray-800 text-green-400 rounded-xl resize-none border-0 focus:ring-2 focus:ring-blue-400"
-                            placeholder="在此貼上 JSON..."></textarea>
-                    </div>
-                    <div class="p-4 border-t bg-gray-50 flex gap-3">
-                        <button @click="copyJson"
-                            class="flex-1 py-3 bg-white border border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition shadow-sm">
-                            📋 複製全部
-                        </button>
-                        <button @click="importJson"
-                            class="flex-1 py-3 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-600 transition shadow hover:shadow-lg hover:-translate-y-0.5">
-                            📥 匯入覆蓋
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </transition>
-
         <transition name="modal">
             <div v-if="previewImage" class="fixed inset-0 z-[150] flex items-center justify-center bg-black/90 p-4"
                 @click="previewImage = null">
@@ -554,37 +517,36 @@
 
                 // 🌟 購物清單 (已加入媽媽的需求) 🌟
                 const showShoppingList = ref(false);
-                const showJsonModal = ref(false);
                 const showCategoryManager = ref(false);
                 const newItemText = ref('');
-                const newItemCategory = ref('藥妝'); // Default category
+                const newItemCategory = ref('大國藥妝'); // Default category
                 const searchQuery = ref('');
                 const filterCategory = ref('All');
                 const currentPage = ref(1);
                 const itemsPerPage = 5;
-                const jsonContent = ref('');
                 const newCategoryText = ref('');
+                const showInputError = ref(false);
 
-                // Default Categories
-                const defaultCategories = ['藥妝', '電器', '零食', '服飾', '其他'];
+                // Default Categories - Store Names
+                const defaultCategories = ['唐吉訶德', '大國藥妝', '黑門市場', '便利商店', '百貨公司', '機場免稅'];
                 const storeCategories = ref(JSON.parse(localStorage.getItem(CATEGORY_KEY)) || defaultCategories);
 
                 // Load from localStorage or use default
                 const defaultList = [
-                    { id: 1, text: '雅詩蘭黛 年輕無敵膠原霜 (75ml)', category: '藥妝', checked: false, note: '給媽媽 (Mom)', image: './assets/estee_cream.png' },
-                    { id: 2, text: '雅詩蘭黛 特潤超導全方位修護露 (50ml)', category: '藥妝', checked: false, note: '給媽媽 (小棕瓶)', image: './assets/estee_serum.png' },
-                    { id: 3, text: 'EVE 止痛藥 (藍色)', category: '藥妝', checked: false, note: '' },
-                    { id: 4, text: '合利他命 EX', category: '藥妝', checked: false, note: '' },
-                    { id: 5, text: '梳子清潔刷', category: '其他', checked: false, note: '輕鬆清潔梳子上的頭髮', image: './assets/comb_cleaner.png' },
-                    { id: 6, text: '護髮油', category: '藥妝', checked: false, note: '味道淡雅質地清爽', image: './assets/hair_oil.png' },
-                    { id: 7, text: '睡眠香氛噴霧', category: '藥妝', checked: false, note: '超熱門噴霧香味聞起來很放鬆', image: './assets/sleep_spray.png' },
-                    { id: 8, text: 'Gyutto 質感整形髮膜', category: '藥妝', checked: false, note: '這款一定要試試', image: './assets/gyutto_mask.png' },
-                    { id: 9, text: '皮卡丘滾雪球', category: '零食', checked: false, note: '除了有皮卡丘滾雪球', image: './assets/pikachu_snow.png' },
-                    { id: 10, text: 'excel蜜粉', category: '藥妝', checked: false, note: '粉質無敵細緻', image: './assets/excel_powder.png' },
+                    { id: 1, text: '雅詩蘭黛 年輕無敵膠原霜 (75ml)', category: '百貨公司', checked: false, note: '給媽媽 (Mom)', image: './assets/estee_cream.png' },
+                    { id: 2, text: '雅詩蘭黛 特潤超導全方位修護露 (50ml)', category: '百貨公司', checked: false, note: '給媽媽 (小棕瓶)', image: './assets/estee_serum.png' },
+                    { id: 3, text: 'EVE 止痛藥 (藍色)', category: '大國藥妝', checked: false, note: '' },
+                    { id: 4, text: '合利他命 EX', category: '大國藥妝', checked: false, note: '' },
+                    { id: 5, text: '梳子清潔刷', category: '唐吉訶德', checked: false, note: '輕鬆清潔梳子上的頭髮', image: './assets/comb_cleaner.png' },
+                    { id: 6, text: '護髮油', category: '大國藥妝', checked: false, note: '味道淡雅質地清爽', image: './assets/hair_oil.png' },
+                    { id: 7, text: '睡眠香氛噴霧', category: '唐吉訶德', checked: false, note: '超熱門噴霧香味聞起來很放鬆', image: './assets/sleep_spray.png' },
+                    { id: 8, text: 'Gyutto 質感整形髮膜', category: '大國藥妝', checked: false, note: '這款一定要試試', image: './assets/gyutto_mask.png' },
+                    { id: 9, text: '皮卡丘滾雪球', category: '唐吉訶德', checked: false, note: '除了有皮卡丘滾雪球', image: './assets/pikachu_snow.png' },
+                    { id: 10, text: 'excel蜜粉', category: '大國藥妝', checked: false, note: '粉質無敵細緻', image: './assets/excel_powder.png' },
                     { id: 11, text: '京都塔 吉伊卡娃紀念幣', category: '其他', checked: false, note: '京都塔限定', image: './assets/chiikawa_coin.png' },
-                    { id: 12, text: '按壓原子筆', category: '文具', checked: false, note: '每次按都會換表情', image: './assets/click_pen.png' },
+                    { id: 12, text: '按壓原子筆', category: '唐吉訶德', checked: false, note: '每次按都會換表情', image: './assets/click_pen.png' },
                     { id: 13, text: '3coin行李收納袋', category: '其他', checked: false, note: '旅行必備', image: './assets/luggage_bag.png' },
-                    { id: 14, text: '壓縮袋 壓縮機', category: '電器', checked: false, note: '節省空間神器', image: './assets/compression_bag.png' }
+                    { id: 14, text: '壓縮袋 壓縮機', category: '唐吉訶德', checked: false, note: '節省空間神器', image: './assets/compression_bag.png' }
                 ];
 
                 // Migrate old list structure if necessary (add missing IDs or categories)
@@ -602,22 +564,11 @@
                 // Watch for changes and save
                 watch(shoppingList, (newVal) => {
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(newVal));
-                    // Update JSON content if modal is open to keep in sync
-                    if (showJsonModal.value) {
-                        jsonContent.value = JSON.stringify(newVal, null, 2);
-                    }
                 }, { deep: true });
 
                 watch(storeCategories, (newVal) => {
                     localStorage.setItem(CATEGORY_KEY, JSON.stringify(newVal));
                 }, { deep: true });
-
-                // Update JSON content when modal opens
-                watch(showJsonModal, (isOpen) => {
-                    if (isOpen) {
-                        jsonContent.value = JSON.stringify(shoppingList.value, null, 2);
-                    }
-                });
 
                 // Computed Properties for Filtering & Pagination
                 const filteredShoppingList = computed(() => {
@@ -657,16 +608,16 @@
 
                     // Auto-add new requested items if not present
                     const newItems = [
-                        { text: '梳子清潔刷', checked: false, note: '輕鬆清潔梳子上的頭髮', image: './assets/comb_cleaner.png' },
-                        { text: '護髮油', checked: false, note: '味道淡雅質地清爽', image: './assets/hair_oil.png' },
-                        { text: '睡眠香氛噴霧', checked: false, note: '超熱門噴霧香味聞起來很放鬆', image: './assets/sleep_spray.png' },
-                        { text: 'Gyutto 質感整形髮膜', checked: false, note: '這款一定要試試', image: './assets/gyutto_mask.png' },
-                        { text: '皮卡丘滾雪球', checked: false, note: '除了有皮卡丘滾雪球', image: './assets/pikachu_snow.png' },
-                        { text: 'excel蜜粉', checked: false, note: '粉質無敵細緻', image: './assets/excel_powder.png' },
-                        { text: '京都塔 吉伊卡娃紀念幣', checked: false, note: '京都塔限定', image: './assets/chiikawa_coin.png' },
-                        { text: '按壓原子筆', checked: false, note: '每次按都會換表情', image: './assets/click_pen.png' },
-                        { text: '3coin行李收納袋', checked: false, note: '旅行必備', image: './assets/luggage_bag.png' },
-                        { text: '壓縮袋 壓縮機', checked: false, note: '節省空間神器', image: './assets/compression_bag.png' }
+                        { id: 5, text: '梳子清潔刷', category: '唐吉訶德', checked: false, note: '輕鬆清潔梳子上的頭髮', image: './assets/comb_cleaner.png' },
+                        { id: 6, text: '護髮油', category: '大國藥妝', checked: false, note: '味道淡雅質地清爽', image: './assets/hair_oil.png' },
+                        { id: 7, text: '睡眠香氛噴霧', category: '唐吉訶德', checked: false, note: '超熱門噴霧香味聞起來很放鬆', image: './assets/sleep_spray.png' },
+                        { id: 8, text: 'Gyutto 質感整形髮膜', category: '大國藥妝', checked: false, note: '這款一定要試試', image: './assets/gyutto_mask.png' },
+                        { id: 9, text: '皮卡丘滾雪球', category: '唐吉訶德', checked: false, note: '除了有皮卡丘滾雪球', image: './assets/pikachu_snow.png' },
+                        { id: 10, text: 'excel蜜粉', category: '大國藥妝', checked: false, note: '粉質無敵細緻', image: './assets/excel_powder.png' },
+                        { id: 11, text: '京都塔 吉伊卡娃紀念幣', category: '其他', checked: false, note: '京都塔限定', image: './assets/chiikawa_coin.png' },
+                        { id: 12, text: '按壓原子筆', category: '唐吉訶德', checked: false, note: '每次按都會換表情', image: './assets/click_pen.png' },
+                        { id: 13, text: '3coin行李收納袋', category: '其他', checked: false, note: '旅行必備', image: './assets/luggage_bag.png' },
+                        { id: 14, text: '壓縮袋 壓縮機', category: '唐吉訶德', checked: false, note: '節省空間神器', image: './assets/compression_bag.png' }
                     ];
 
                     newItems.forEach(newItem => {
@@ -718,39 +669,17 @@
                             note: ''
                         });
                         newItemText.value = '';
+                        showInputError.value = false;
+                    } else {
+                        showInputError.value = true;
+                        // Shake effect or just focus?
+                        // We will handle V-bind class in template
+                        setTimeout(() => showInputError.value = false, 800);
                     }
                 };
 
                 const deleteItem = (itemToDelete) => {
                     shoppingList.value = shoppingList.value.filter(item => item.id !== itemToDelete.id);
-                };
-
-                // JSON Functions
-                const copyJson = () => {
-                    navigator.clipboard.writeText(jsonContent.value).then(() => {
-                        alert('已複製到剪貼簿！請將代碼傳送給您的旅伴。');
-                    });
-                };
-
-                const importJson = () => {
-                    try {
-                        const parsed = JSON.parse(jsonContent.value);
-                        if (Array.isArray(parsed)) {
-                            if (confirm('確定要匯入並覆蓋目前的清單嗎？此動作無法復原。')) {
-                                // Ensure all imported items have IDs
-                                shoppingList.value = parsed.map((item, idx) => ({
-                                    ...item,
-                                    id: item.id || Date.now() + idx
-                                }));
-                                showJsonModal.value = false;
-                                alert('匯入成功！');
-                            }
-                        } else {
-                            alert('格式錯誤：JSON 必須是陣列格式');
-                        }
-                    } catch (e) {
-                        alert('無效的 JSON 格式：' + e.message);
-                    }
                 };
 
                 // Category Functions
@@ -765,19 +694,6 @@
                     if (confirm('確定刪除此分類？')) {
                         storeCategories.value.splice(idx, 1);
                     }
-                };
-
-                const handleItemImage = (e, idx) => {
-                    // Note: idx in pagination is relative. We need to find real item in shoppingList.
-                    // But here logic is simpler if we just update the specific item passed by template
-                    // Vue reactivity works on the object reference itself.
-                    // The original code passed 'idx' which was index in loop. 
-                    // To be safe with pagination, we should use the item object directly, but let's see how template called it.
-                    // Template was: @change="(e) => handleItemImage(e, idx)"
-                    // We changed template to iterate paginated list. 
-                    // Wait, the template change passed `item` and `idx` from paginatedList. 
-                    // So `idx` depends on page.
-                    // Let's refactor handleItemImage to take the Item Object instead of Index.
                 };
 
                 // Refactored Image Handler
@@ -914,10 +830,9 @@
                     jpyAmount, twdAmount, currentRate, activeDayIndex,
                     showTranslator, showShoppingList, shoppingList, newItemText, addShoppingItem,
                     newItemCategory, storeCategories, searchQuery, filterCategory, paginatedShoppingList, totalPages, currentPage,
-                    showJsonModal, jsonContent, copyJson, importJson,
                     showCategoryManager, newCategoryText, addCategory, removeCategory,
                     handleItemImage: handleItemImageSmart, removeImage: removeImageSmart, handleItemImageSmart, removeImageSmart, deleteItem,
-                    previewImage,
+                    previewImage, showInputError,
                     theme, setTheme, currentThemeKey,
                     currentCategory, currentPhrases, speakJapanese,
                     itinerary, getMorningStart, getHotelName, getTypeIcon, getPointToPointLink, openMap, getMapLink

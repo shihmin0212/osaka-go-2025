@@ -299,10 +299,7 @@
                             :class="filterCategory === cat ? theme.btnColor + ' text-white border-transparent' : 'bg-white text-gray-500 border-gray-200'">
                             {{ cat }}
                         </button>
-                        <button @click="showCategoryManager = true"
-                            class="flex-shrink-0 px-2 py-1 rounded-full text-xs border border-dashed border-gray-300 text-gray-400 hover:text-blue-500 hover:border-blue-300 transition">
-                            ＋分類
-                        </button>
+
                     </div>
 
                     <!-- Add Item Input -->
@@ -439,31 +436,7 @@
         </transition>
 
         <!-- Category Manager Modal -->
-        <transition name="modal">
-            <div v-if="showCategoryManager" class="fixed inset-0 z-[110] flex items-center justify-center px-4"
-                style="background: rgba(0,0,0,0.3); backdrop-filter: blur(2px);">
-                <div class="absolute inset-0" @click="showCategoryManager = false"></div>
-                <div class="modal-content w-full max-w-xs bg-white rounded-2xl shadow-xl overflow-hidden p-4 relative z-10"
-                    @click.stop>
-                    <h3 class="font-bold text-lg mb-4 text-center">🏷️ 管理商分類</h3>
-                    <div class="space-y-2 mb-4 max-h-[200px] overflow-y-auto">
-                        <div v-for="(cat, idx) in storeCategories" :key="cat"
-                            class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                            <span>{{ cat }}</span>
-                            <button v-if="idx > 3" @click="removeCategory(idx)"
-                                class="text-red-400 hover:text-red-600 font-bold">×</button>
-                            <span v-else class="text-xs text-gray-300">預設</span>
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <input v-model="newCategoryText" placeholder="新分類名稱" class="flex-1 border rounded px-2 text-sm"
-                            @keyup.enter="addCategory">
-                        <button @click="addCategory"
-                            class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm font-bold">新增</button>
-                    </div>
-                </div>
-            </div>
-        </transition>
+
 
         <transition name="modal">
             <div v-if="previewImage" class="fixed inset-0 z-[150] flex items-center justify-center bg-black/90 p-4"
@@ -517,58 +490,46 @@
                 const currentCategory = ref('用餐');
 
                 // 🌟 購物清單 (已加入媽媽的需求) 🌟
+                // 🌟 購物清單 (已加入媽媽的需求) 🌟
                 const showShoppingList = ref(false);
-                const showCategoryManager = ref(false);
                 const newItemText = ref('');
                 const newItemCategory = ref('大國藥妝'); // Default category
                 const searchQuery = ref('');
                 const filterCategory = ref('All');
                 const currentPage = ref(1);
                 const itemsPerPage = 5;
-                const newCategoryText = ref('');
                 const showInputError = ref(false);
 
-                // Default Categories - Store Names
-                const defaultCategories = ['唐吉訶德', '大國藥妝', '黑門市場', '便利商店', '百貨公司', '機場免稅'];
-                const storeCategories = ref(JSON.parse(localStorage.getItem(CATEGORY_KEY)) || defaultCategories);
+                // Fixed Categories
+                const storeCategories = ['唐吉訶德', '大國藥妝', '3Coins', '無印良品', '機場免稅', '其他'];
 
                 // Load from localStorage or use default
                 const defaultList = [
-                    { id: 1, text: '雅詩蘭黛 年輕無敵膠原霜 (75ml)', category: '百貨公司', checked: false, note: '給媽媽 (Mom)', image: './assets/estee_cream.png' },
-                    { id: 2, text: '雅詩蘭黛 特潤超導全方位修護露 (50ml)', category: '百貨公司', checked: false, note: '給媽媽 (小棕瓶)', image: './assets/estee_serum.png' },
+                    { id: 1, text: '雅詩蘭黛 年輕無敵膠原霜 (75ml)', category: '機場免稅', checked: false, note: '給媽媽 (Mom)', image: './assets/estee_cream.png' },
+                    { id: 2, text: '雅詩蘭黛 特潤超導全方位修護露 (50ml)', category: '機場免稅', checked: false, note: '給媽媽 (小棕瓶)', image: './assets/estee_serum.png' },
                     { id: 3, text: 'EVE 止痛藥 (藍色)', category: '大國藥妝', checked: false, note: '' },
-                    { id: 4, text: '合利他命 EX', category: '大國藥妝', checked: false, note: '' },
-                    { id: 5, text: '梳子清潔刷', category: '唐吉訶德', checked: false, note: '輕鬆清潔梳子上的頭髮', image: './assets/comb_cleaner.png' },
-                    { id: 6, text: '護髮油', category: '大國藥妝', checked: false, note: '味道淡雅質地清爽', image: './assets/hair_oil.png' },
-                    { id: 7, text: '睡眠香氛噴霧', category: '唐吉訶德', checked: false, note: '超熱門噴霧香味聞起來很放鬆', image: './assets/sleep_spray.png' },
-                    { id: 8, text: 'Gyutto 質感整形髮膜', category: '大國藥妝', checked: false, note: '這款一定要試試', image: './assets/gyutto_mask.png' },
-                    { id: 9, text: '皮卡丘滾雪球', category: '唐吉訶德', checked: false, note: '除了有皮卡丘滾雪球', image: './assets/pikachu_snow.png' },
+                    // Item 4 (合利他命) Deleted
+                    { id: 5, text: '梳子清潔刷', category: '無印良品', checked: false, note: '輕鬆清潔梳子上的頭髮', image: './assets/comb_cleaner.png' },
+                    { id: 6, text: '護髮油', category: '無印良品', checked: false, note: '味道淡雅質地清爽', image: './assets/hair_oil.png' },
+                    { id: 7, text: '睡眠香氛噴霧', category: '無印良品', checked: false, note: '超熱門噴霧香味聞起來很放鬆', image: './assets/sleep_spray.png' },
+                    { id: 8, text: 'Gyutto 質感整形髮膜', category: '唐吉訶德', checked: false, note: '這款一定要試試', image: './assets/gyutto_mask.png' },
+                    { id: 9, text: '皮卡丘滾雪球', category: '其他', checked: false, note: '除了有皮卡丘滾雪球', image: './assets/pikachu_snow.png' },
                     { id: 10, text: 'excel蜜粉', category: '大國藥妝', checked: false, note: '粉質無敵細緻', image: './assets/excel_powder.png' },
                     { id: 11, text: '京都塔 吉伊卡娃紀念幣', category: '其他', checked: false, note: '京都塔限定', image: './assets/chiikawa_coin.png' },
                     { id: 12, text: '按壓原子筆', category: '唐吉訶德', checked: false, note: '每次按都會換表情', image: './assets/click_pen.png' },
-                    { id: 13, text: '3coin行李收納袋', category: '其他', checked: false, note: '旅行必備', image: './assets/luggage_bag.png' },
-                    { id: 14, text: '壓縮袋 壓縮機', category: '唐吉訶德', checked: false, note: '節省空間神器', image: './assets/compression_bag.png' }
+                    { id: 13, text: '3coin行李收納袋', category: '3Coins', checked: false, note: '旅行必備', image: './assets/luggage_bag.png' },
+                    { id: 14, text: '壓縮袋 壓縮機', category: '3Coins', checked: false, note: '節省空間神器', image: './assets/compression_bag.png' }
                 ];
 
-                // Migrate old list structure if necessary (add missing IDs or categories)
+                // Load saved list
                 let savedList = JSON.parse(localStorage.getItem(STORAGE_KEY));
-                if (savedList) {
-                    savedList = savedList.map((item, index) => ({
-                        ...item,
-                        id: item.id || Date.now() + index,
-                        category: item.category || '未分類'
-                    }));
-                }
 
+                // InitializeRef
                 const shoppingList = ref(savedList || defaultList);
 
                 // Watch for changes and save
                 watch(shoppingList, (newVal) => {
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(newVal));
-                }, { deep: true });
-
-                watch(storeCategories, (newVal) => {
-                    localStorage.setItem(CATEGORY_KEY, JSON.stringify(newVal));
                 }, { deep: true });
 
                 // Computed Properties for Filtering & Pagination
@@ -601,31 +562,46 @@
 
                 // Auto-inject images for existing items if missing (One-time fix for user)
                 onMounted(() => {
-                    // Update existing items images
+                    // One-time Data Migration (Reset Categories for specific items)
+                    const updates = {
+                        '雅詩蘭黛 年輕無敵膠原霜 (75ml)': '機場免稅',
+                        '雅詩蘭黛 特潤超導全方位修護露 (50ml)': '機場免稅',
+                        '梳子清潔刷': '無印良品',
+                        '護髮油': '無印良品',
+                        '睡眠香氛噴霧': '無印良品',
+                        'Gyutto 質感整形髮膜': '唐吉訶德',
+                        '皮卡丘滾雪球': '其他',
+                        'excel蜜粉': '大國藥妝',
+                        '京都塔 吉伊卡娃紀念幣': '其他',
+                        '按壓原子筆': '唐吉訶德',
+                        '3coin行李收納袋': '3Coins',
+                        '壓縮袋 壓縮機': '3Coins'
+                    };
+
+                    // 1. Remove deleted items (合利他命 EX)
+                    shoppingList.value = shoppingList.value.filter(item => !item.text.includes('合利他命 EX'));
+
+                    // 2. Update Categories and Add new defaults if missing
                     shoppingList.value.forEach(item => {
+                        // Update Category if in map
+                        if (updates[item.text]) {
+                            item.category = updates[item.text];
+                        }
+                        // Update specific notes/images if needed (legacy fix)
                         if (item.text.includes('年輕無敵膠原霜') && !item.image) item.image = './assets/estee_cream.png';
-                        if (item.text.includes('特潤超導全方位修護露') && !item.image) item.image = './assets/estee_serum.png';
                     });
 
-                    // Auto-add new requested items if not present
+                    // 3. Ensure new default items exist
                     const newItems = [
-                        { id: 5, text: '梳子清潔刷', category: '唐吉訶德', checked: false, note: '輕鬆清潔梳子上的頭髮', image: './assets/comb_cleaner.png' },
-                        { id: 6, text: '護髮油', category: '大國藥妝', checked: false, note: '味道淡雅質地清爽', image: './assets/hair_oil.png' },
-                        { id: 7, text: '睡眠香氛噴霧', category: '唐吉訶德', checked: false, note: '超熱門噴霧香味聞起來很放鬆', image: './assets/sleep_spray.png' },
-                        { id: 8, text: 'Gyutto 質感整形髮膜', category: '大國藥妝', checked: false, note: '這款一定要試試', image: './assets/gyutto_mask.png' },
-                        { id: 9, text: '皮卡丘滾雪球', category: '唐吉訶德', checked: false, note: '除了有皮卡丘滾雪球', image: './assets/pikachu_snow.png' },
-                        { id: 10, text: 'excel蜜粉', category: '大國藥妝', checked: false, note: '粉質無敵細緻', image: './assets/excel_powder.png' },
-                        { id: 11, text: '京都塔 吉伊卡娃紀念幣', category: '其他', checked: false, note: '京都塔限定', image: './assets/chiikawa_coin.png' },
-                        { id: 12, text: '按壓原子筆', category: '唐吉訶德', checked: false, note: '每次按都會換表情', image: './assets/click_pen.png' },
-                        { id: 13, text: '3coin行李收納袋', category: '其他', checked: false, note: '旅行必備', image: './assets/luggage_bag.png' },
-                        { id: 14, text: '壓縮袋 壓縮機', category: '唐吉訶德', checked: false, note: '節省空間神器', image: './assets/compression_bag.png' }
+                        { id: 13, text: '3coin行李收納袋', category: '3Coins', checked: false, note: '旅行必備', image: './assets/luggage_bag.png' },
+                        { id: 14, text: '壓縮袋 壓縮機', category: '3Coins', checked: false, note: '節省空間神器', image: './assets/compression_bag.png' }
                     ];
-
                     newItems.forEach(newItem => {
                         if (!shoppingList.value.some(i => i.text === newItem.text)) {
                             shoppingList.value.push(newItem);
                         }
                     });
+
 
                     // 匯率 API (原有邏輯)
                     fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://tw.rter.info/capi.php'))
@@ -636,6 +612,7 @@
                                 currentRate.value = (data.USDTWD.Exrate / data.USDJPY.Exrate).toFixed(4);
                             }
                         });
+
 
                     // 自動跳到當天 (原有邏輯)
                     const now = new Date();
@@ -673,28 +650,12 @@
                         showInputError.value = false;
                     } else {
                         showInputError.value = true;
-                        // Shake effect or just focus?
-                        // We will handle V-bind class in template
                         setTimeout(() => showInputError.value = false, 800);
                     }
                 };
 
                 const deleteItem = (itemToDelete) => {
                     shoppingList.value = shoppingList.value.filter(item => item.id !== itemToDelete.id);
-                };
-
-                // Category Functions
-                const addCategory = () => {
-                    const val = newCategoryText.value.trim();
-                    if (val && !storeCategories.value.includes(val)) {
-                        storeCategories.value.push(val);
-                        newCategoryText.value = '';
-                    }
-                };
-                const removeCategory = (idx) => {
-                    if (confirm('確定刪除此分類？')) {
-                        storeCategories.value.splice(idx, 1);
-                    }
                 };
 
                 // Refactored Image Handler
@@ -707,8 +668,7 @@
                     }
                 };
 
-                const removeImageSmart = (item) => item.image = null; // Replaces removeImage(idx)
-
+                const removeImageSmart = (item) => item.image = null;
                 // Legacy functions replacement kept valid for correctness if needed, but we use Smart versions in template
                 const removeImage = (idx) => { };
 

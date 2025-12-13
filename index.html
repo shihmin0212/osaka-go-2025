@@ -629,7 +629,7 @@
                 // Klook Links
                 const LINKS = {
                     HARUKA: appendAID('https://www.klook.com/zh-TW/activity/18400-jr-haruka-airport-express-train-tickets-osaka/'),
-                    AMANOHASHIDATE: appendAID('https://www.klook.com/zh-TW/activity/25686-amanohashidate-ine-boathouse-miyama-kayabuki-no-sato-day-tour-osaka/'),
+                    AMANOHASHIDATE: appendAID('https://www.klook.com/zh-TW/activity/146607-amanohashidate-funaya-ine-bay-beautiful-scenery-tour-osaka-kyoto/'),
                     UMEDA_SKY: appendAID('https://www.klook.com/zh-TW/activity/1301-umeda-sky-building-osaka/'),
                     RAPIT: appendAID('https://www.klook.com/zh-TW/activity/599-kansai-airport-nankai-line-osaka/'),
                     HARUKAS: appendAID('https://www.klook.com/zh-TW/activity/2424-harukas-300-observatory-ticket-osaka/'),
@@ -733,9 +733,10 @@
                     {
                         date: '12/23 (二)', area: '海之京都',
                         spots: [
-                            { time: '07:40', type: 'spot', mustGo: true, name: 'Kyoto Station Hachijo Exit', desc: '一日遊集合 (確認信箱)', ticket: { source: 'Klook', url: LINKS.AMANOHASHIDATE, booked: false } },
-                            { time: '10:30', type: 'spot', name: 'Amanohashidate', desc: '天橋立飛龍' },
-                            { time: '13:00', type: 'spot', name: 'Ine no Funaya', desc: '伊根舟屋餵海鷗' },
+                            { time: '07:40', type: 'spot', mustGo: true, name: 'Kyoto Station Hachijo Exit', desc: '集合：JR東海 京都站八條東口 直行110米 (Sankun Garden)', ticket: { source: 'Klook', url: LINKS.AMANOHASHIDATE, booked: true } },
+                            { time: '10:30', type: 'spot', name: 'Amanohashidate', desc: '天橋立 / 智恩寺 / 纜車' },
+                            { time: '13:00', type: 'spot', name: 'Ine no Funaya', desc: '伊根舟屋 / 餵海鷗 (京都直達)' },
+                            { time: '17:30', type: 'transport', name: 'Kyoto Station', desc: '行程結束：京都站下車' },
                             { time: '19:00', type: 'food', name: 'Kyoto Ramen Koji', desc: '拉麵小路' }
                         ]
                     },
